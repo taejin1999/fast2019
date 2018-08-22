@@ -1,0 +1,87 @@
+%\documentclass[letterpaper, onecolumn, 10pt]{article}
+%\linespread{2.4}
+\documentclass[letterpaper, twocolumn, 10pt]{article}
+\usepackage{usenix2019}
+%\linespread{0.99}
+
+\usepackage{multirow}
+\usepackage{comment}
+\usepackage{epsfig}
+%\usepackage{kotex}
+%\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{multirow}
+\usepackage{url}
+\usepackage{subfig}
+\usepackage{color}
+\usepackage{xcolor}
+\usepackage{cases}
+\usepackage{graphicx}
+%\usepackage{float}
+\usepackage{caption}
+
+\renewcommand{\figurename}{Fig.}
+
+\begin{document}
+
+\title{
+\bf PCStream: Automatic Stream Allocation Using Program Contexts}
+
+%\numberofauthors{1}
+%
+%\author{
+%	{\rm Taejin Kim$^1$, Sangwook Shane Hahn$^1$, Sungjin Lee$^2$,} \\ 
+%	{\rm Jooyoung Hwang$^3$, Jongyoul Lee$^3$, and Jihong Kim$^1$} \\
+%	\and
+%	$^1$Seoul National University, $^2$DGIST, $^3$Samsung Electronics
+%	}
+
+
+\maketitle
+%\thispagestyle{empty}
+\pagestyle{empty}
+\subsection*{Abstract}
+We propose a fully automatic stream management technique, called {\sf PCStream}, 
+for multi-streamed SSDs.
+{\sf PCStream} is based on our observation that data lifetimes can be reliably predicted using
+write program contexts.  
+By extracting program contexts during runtime,  
+{\sf PCStream}  automates the data-to-stream mapping.  
+When data mapped to the same
+stream show large differences in their lifetimes, {\sf PCStream}
+moves the long-lived data of the current stream to 
+its substream during garbage collection.
+Our experimental results 
+show that {\sf PCStream} 
+can reduce the garbage collection overhead as much as a highly-optimized 
+manual stream management technique 
+while no code modification is necessary.
+
+\input{introduction}
+\input{motivation}
+\input{pcstream}
+\input{experiment}
+\input{conclusion}
+
+
+\begin{comment}
+\section*{Acknowledgments}
+
+This work was supported by the National Research Foundation of Korea (NRF) 
+grant funded by the Korea government (Ministry
+of Science and ICT) 
+(NRF-2015M3C4A7065645 and NRF-2018R1A2B6006878).
+The ICT at Seoul National University
+provided research facilities for this study. 
+Sungjin Lee was supported by
+the NRF grant funded by the Korea government 
+(Ministry of Science and ICT) 
+(NRF-2017R1E1A1A01077410) and 
+the DGIST R\&D Program of the Ministry of 
+Science and ICT (18-EE-01).
+(Corresponding Author: Jihong Kim)
+\end{comment}
+
+\input{reference}
+
+\end{document}
