@@ -25,7 +25,7 @@
 \begin{document}
 
 \title{
-\bf PCStream: Automatic Stream Allocation Using Program Contexts}
+\bf Fully Automatic Stream Management for Multi-Streamed SSDs \\ Using Program Contexts}
 
 %\numberofauthors{1}
 %
@@ -41,21 +41,30 @@
 %\thispagestyle{empty}
 \pagestyle{empty}
 \subsection*{Abstract}
-We propose a fully automatic stream management technique, called {\sf PCStream}, 
-for multi-streamed SSDs.
-{\sf PCStream} is based on our observation that data lifetimes can be reliably predicted using
-write program contexts.  
-By extracting program contexts during runtime,  
-{\sf PCStream}  automates the data-to-stream mapping.  
-When data mapped to the same
-stream show large differences in their lifetimes, {\sf PCStream}
-moves the long-lived data of the current stream to 
-its substream during garbage collection.
-Our experimental results 
-show that {\sf PCStream} 
-can reduce the garbage collection overhead as much as a highly-optimized 
-manual stream management technique 
-while no code modification is necessary.
+Multi-streamed SSDs, when their streams are properly managed, 
+can significantly improve both the performance and lifetime of flash-based SSDs.  
+However, most existing stream management techniques
+require manual stream allocation for a small number of streams, thus making 
+a wide adoption of multi-streamed SSDs in practice difficult.  
+In this paper, we propose a {\it fully-automatic} stream
+management approach which removes the existing major hurdles for multi-streamed SSDs.  
+First, we present  an automatic stream management technique, PCStream++, which requires 
+no manual coding at all from existing applications.   
+PCStream++ is based on our observation that data lifetimes can be reliably predicted
+using write program contexts.
+By extracting program contexts during runtime, PCStream++ automates the data-to-stream mapping.  
+When data mapped to the same stream show large differences in their lifetimes,
+PCStream++ separates the long-lived data of the current stream to 
+another stream during garbage collection (GC).   
+In order to support stream reallocation efficiently during garble collection, 
+we propose {\it GC-only streams} for multi-streamed SSDs.   
+Taking advantage of its GC-only property, we can increase the number of SSD streams 
+significantly by overcoming the existing resource constraint on implementing streams.  
+By using GC-only streams, we can easily separate streams with
+different lifetimes without affecting the overall performance.    
+Our evaluations on real SSDs show that PCStream++ can reduce ...
+
+
 
 \input{introduction}
 \input{motivation}
