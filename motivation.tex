@@ -152,7 +152,32 @@ those from the logging-activity PC.
 
 \subsection{Two-phase stream management}
 \subsubsection{Limited number of streams}
-+ resource requirement explanation (memory, power) \\ \\
+
+It is advantageous to support a large number of streams in order to manage data with different lifetime characteristics as distinct streams.
+Therefore, the multi-stream specification defines up to 65536 streams [].
+However, the number of streams actually supported by an SSD that implements the specification is limited to 4 to 16[].
+This is a limitation that occurs because there are restrictions on the resource required to implement multi-stream. It can be divided into memory, power, and overprovision resource.
+
+First, memory resource may limit the number of multi-stream.
+The controller that runs the SSD provides various memories such as TCM, SRAM, and DRAM. 
+To optimize the performance, frequently referenced data structures should be located in fast memory.
+The size of the data structure associated with a multi-stream is proportional to the number of streams supported and is directly related to performance, so it must be located in fast memory.
+However, because of limited memory sizes, such as TCM or SRAM,
+ there is a limit to the number of streams that can be supported with good performance.
+
+Second, power resource may limit the number of multi-stream.
+SSDs that support multi-stream are used in data centers or storage servers. SSDs use tantalum or electrolytic capacitors as backup power to guarantee data integrity even under sudden power off conditions.
+Buffered data that is used to effectively utilize the parallelism of flash ensures reliable write to flash by using backup power during power off detection.
+Since the buffered data is managed per stream, its size increases in proportion to the number of streams.
+This also limits the number of streams that can be supported because SSDs use limited backup power at the limited PCB size.
+
+Lastly, overprovision resource may limit the number of multi-stream.
+As the number of multi-stream support increases, the active point increases. 
+For each active point, it is necessary to allocate separate flash blocks.
+ As the number of streams increases, it causes a decrease in overprovision area of SSD.
+However, since the overprovisioning area of the SSD is limited, if the number of streams becomes too large, there may be a problem of increase of WAF due to overprovision reduction. 
+In the case of streams over the number of overprovisioned blocks, flash block allocation  is not possible.
+ 
 
 \subsubsection{I/O activity with large lifetime variance}
 For most PCs, their lifetime distributions tend to have small variances.  

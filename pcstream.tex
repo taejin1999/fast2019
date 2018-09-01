@@ -137,7 +137,24 @@ those issues as our future work.
 
 \subsection{Internal Stream Management}
 \subsubsection{Low resource requirement of IOS}
-+ explain different memory and power resource requirement \\ \\
+
+In Section 2.2.1, we describe various resource overheads that limit the number of external streams.
+In the case of an internal stream used for internal data migration of SSD, 
+it has a relatively small resource overhead due to its distinguishing characteristics from the external stream.
+
+Unlike external streams, which are handled directly by host requests,
+since the internal stream can be processed as a background operation, 
+performance degradation may not occur even if the data structure is located in a relatively slow memory.
+However, the saturation condition, which requires GC to be continuously executed during write processing, 
+may cause performance degradation due to relatively slow memory usage.
+
+With regard to power resources, buffering can be used for flash parallelism even during data migration, but there is a big difference in that no power resource is required to guarantee data integrity.
+In the case of buffering data for host write, if data is not stored in flash when power off, data is lost. 
+However, in the case of buffering data during data migration, since the original data always exists in the source block of migration, there is no problem in ensuring data integrity without special handling or power resource requirement.
+
+The increase of the active point for data migration has the problem that WAF might be increased by reducing the overprovision area. 
+However, in most workloads, the benefit of using WAF reduction with multiple internal streams in data migration has the advantage of offsetting the increase in WAF due to overprovision area reduction and lowering the overall WAF.
+
 
 \subsubsection{IOS Management}
 + explain block utilization trade-off, deciding number of IOS and mapping \\ \\ 
