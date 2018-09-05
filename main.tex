@@ -48,13 +48,13 @@ require manual stream allocation for a small number of streams, thus making
 a wide adoption of multi-streamed SSDs in practice difficult.  
 In this paper, we propose a {\it fully-automatic} stream
 management approach which removes the existing major hurdles for multi-streamed SSDs.  
-First, we present  an automatic stream management technique, PCStream++, which requires 
+First, we present  an automatic stream management technique, PCStream, which requires 
 no manual coding at all from existing applications.   
-PCStream++ is based on our observation that data lifetimes can be reliably predicted
+PCStream is based on our observation that data lifetimes can be reliably predicted
 using write program contexts.
-By extracting program contexts during runtime, PCStream++ automates the data-to-stream mapping.  
+By extracting program contexts during runtime, PCStream automates the data-to-stream mapping.  
 When data mapped to the same stream show large differences in their lifetimes,
-PCStream++ separates the long-lived data of the current stream to 
+PCStream separates the long-lived data of the current stream to 
 another stream during garbage collection (GC).   
 In order to support stream reallocation efficiently during garble collection, 
 we propose {\it GC-only streams} for multi-streamed SSDs.   
@@ -62,7 +62,7 @@ Taking advantage of its GC-only property, we can increase the number of SSD stre
 significantly by overcoming the existing resource constraint on implementing streams.  
 By using GC-only streams, we can easily separate streams with
 different lifetimes without affecting the overall performance.    
-Our evaluations on real SSDs show that PCStream++ can reduce ...
+Our evaluations on real SSDs show that PCStream can reduce ...
 
 
 

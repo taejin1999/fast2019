@@ -1,5 +1,5 @@
 \section{Requirement of Automatic Stream Management Technique}
-\subsection{I/O activity-based allocation}
+\subsection{Automatic Stream Allocation}
 \subsubsection{Fallacy: LBA-based lifetime prediction}
 + in-place update workload will be added \\ \\
 Many existing data separation techniques such as~\cite{AutoStream, HotCold} 
@@ -150,7 +150,7 @@ For example, data from the flushing-activity PC remain valid a lot longer than
 those from the logging-activity PC.
 
 
-\subsection{Resource Constraint of Streams}
+\subsection{Resolving Resource Constraints of Streams}
 \subsubsection{Limited number of streams}
 
 It is advantageous to support a large number of streams in order to manage data with different lifetime characteristics as distinct streams.
