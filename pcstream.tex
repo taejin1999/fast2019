@@ -29,8 +29,7 @@ mapper module} clusters PCs with similar lifetimes and maps them together to
 the same stream ID.  This mapping is required because 
 the number of streams in an SSD is generally less than the number of PCs in host applications.
 
-\subsection{External Stream Management}
-\subsubsection{Automatic PC computation}
+\subsection{Automatic PC computation}
 As mentioned earlier, a PC is represented by a PC signature which is defined as
 the sum of program counter values along the execution path of a function call that
 finally reaches a write-related system function. A function call involves
@@ -98,11 +97,10 @@ cannot follow the same execution path to write system functions.
 (If they do, they are the same PC.) In our evaluation
 with a 3.4 GHz CPU machine, the performance overhead of the restricted scan was
 almost negligible, taking only 300-400 $n$sec per write system call.
+\\
++ JVM (cassandra) will be added /  mmap (mongo DB), internal buffer (mysql) - future work \\ \\
 
-\subsubsection{Computing PC for Indirect Writes}
-+ JVM (cassandra), mmap (mongo DB), internal buffer (mysql) - future work \\ \\
-
-\subsubsection{PC lifetime management}
+\subsection{PC lifetime management}
 + maintaining PC information for repeated executing application (hashing) \\ \\
 The prediction of PC lifetimes is rather complicated. 
 The data lifetime of the append-only workload is defined 
@@ -116,7 +114,7 @@ Note that, the
 same PC may generate multiple data streams with different lifetimes.
 We take the average lifetime as the PC's lifetime.
 
-\subsubsection{Mapping PCs to SSD streams}
+\subsection{Mapping PCs to SSD streams}
 
 The last step in \textsf{\small PCStream} is to map
 a group of PCs with similar lifetimes to an SSD stream.
@@ -135,8 +133,7 @@ must be efficient enough to quickly handle many PCs. Our goal in this work is
 to confirm the feasibility of using PCs, so we leave
 those issues as our future work.
 
-\subsection{Internal Stream Management}
-\subsubsection{Low resource requirement of IOS}
+\subsection{Low resource requirement of internal streams}
 
 In Section 2.2.1, we describe various resource overheads that limit the number of external streams.
 In the case of an internal stream used for internal data migration of SSD, 
@@ -155,7 +152,4 @@ However, in the case of buffering data during data migration, since the original
 The increase of the active point for data migration has the problem that WAF might be increased by reducing the overprovision area. 
 However, in most workloads, the benefit of using WAF reduction with multiple internal streams in data migration has the advantage of offsetting the increase in WAF due to overprovision area reduction and lowering the overall WAF.
 
-
-\subsubsection{IOS Management}
-+ explain block utilization trade-off, deciding number of IOS and mapping \\ \\ 
 
