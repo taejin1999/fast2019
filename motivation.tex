@@ -1,7 +1,11 @@
-\section{Requirement of Automatic Stream Management Technique}
-\subsection{Automatic Stream Allocation}
-\subsubsection{Fallacy: LBA-based lifetime prediction}
-+ in-place update workload will be added \\ \\
+\section{Limitations of Existing Stream Management Techniques}
+\subsection{Limitation 1: No Fully Automatic Stream Management}
+
+\subsubsection{Shortcomings of existing techniques}
+ ... Shortcomings of existing techniques: no fully automatic solution yet.  App should assign virtual stream...
+
+
+\subsubsection{LBA-based technique's problems}
 Many existing data separation techniques such as~\cite{AutoStream, HotCold} 
 estimate the data lifetime based on the update frequency of LBAs.  
 For example, \textsf{\small AutoStream}~\cite{AutoStream} assumes that, if
@@ -61,18 +65,6 @@ followed by a rapid drop around the logical time 600.
 Our illustration using RocksDB strongly suggests that under append-only
 workloads, LBAs are not useful in deciding data lifetimes.
 
-\subsubsection{Program context as a lifetime predictor}
-In developing \textsf{\small PCStream}, our key insight was that in most applications,
-(regardless of their I/O workload characteristics)
-a few dominant I/O activities exist
-and each dominant I/O activity   
-represents the application's important I/O context (e.g., for logging or for flushing). 
-Furthermore, most dominant I/O activities tend to have distinct data lifetime patterns.
-In order to distinguish data by their lifetimes, therefore, 
-it is important to effectively distinguish dominant I/O activities from each other.  
-For example, in update workloads, 
-LBAs alone were effective in separating dominant I/O activities.  
-
 
 \begin{comment}
 In developing PCStream, we started from a simple question: 
@@ -97,62 +89,7 @@ However, owing to considerable implementation efforts required to modify
 individual applications, this approach is not widely used in practice.
 \end{comment}
 
-In this paper, we argue that a program context is an efficient  general-purpose
-indicator for separating dominant I/O activities regardless of the type of I/O
-workloads.  Since a PC represents an execution path of an application which
-invokes write-related system functions such as {\tt write()} and {\tt writev()}
-in the Linux kernel,  we represent the PC by summing program counter values of
-all the functions along the execution path which leads to a write system call.
-In RocksDB, for example, dominant I/O activities include logging, flushing and
-compaction.  Since they are invoked through different function-call paths, we
-can easily identify dominant I/O activities of RocksDB using PCs.  For example,
-Fig.~\ref{fig:getpc}(a) shows an execution path for flushing in RocksDB.  The
-sum of program counter values of \texttt{Run()}, \texttt{WriteLevel0Table()},
-and \texttt{BuildTable()} is used to represent the PC for the flushing
-activity.  Note that using the program context to distinguish data lifetimes is
-not new.  For example, Ha {\it et al.} proposed a data separation technique
-based on the program context~\cite{PCHa}.   However, their work was neither
-designed for append-only workloads nor for modern multi-streamed SSDs.
-
-\begin{figure}[t]
-\centering
-\hfill
-%\vspace{-10pt}
-	\subfloat[Logging (PC)]{\includegraphics[width=0.2\textwidth]{figure/type_1}} % data from 4/03031953 
-	\hspace{2pt}
-	\subfloat[Logging (manual)]{\includegraphics[width=0.2\textwidth]{figure/pcID_2}}
-\hfill
-\vspace{7pt}
-	\subfloat[Flushing (PC)] {\includegraphics[width=0.2\textwidth]{figure/type_3}}
-	\hspace{2pt}
-	\subfloat[Flushing (manual)]{\includegraphics[width=0.2\textwidth]{figure/pcID_3}}
-%\vspace{-7pt}
-\caption{Data lifetime distributions of different PCs.} 
-\label{fig:types_and_PCs}
-%\vspace{-20pt}
-\end{figure}
-
-
-In order to validate our hypothesis that PCs can be useful for predicting
-lifetimes by distinguishing dominant I/O activities, we conducted experiments
-using RocksDB, comparing the accuracy of identifying dominant I/O activities
-using two different methods.  First, we manually identified dominant I/O
-activities by inspecting the source code. Second, we automatically decided
-dominant I/O activities by extracting PCs for write-related system functions.
-Fig.~\ref{fig:types_and_PCs} illustrates two dominant I/O activities matched
-between two methods.   As shown in Fig.~\ref{fig:types_and_PCs}(a)
-and~\ref{fig:types_and_PCs}(b), the logging activity of RocksDB is correctly
-identified by two methods.  Furthermore, from the logging-activity PC, we can
-clearly observe that data written from the PC are short-lived. Similarly,
-from Fig.~\ref{fig:types_and_PCs}(c) and~\ref{fig:types_and_PCs}(d), we observe
-that data written from the flushing-activity PC behave in a different fashion.
-For example, data from the flushing-activity PC remain valid a lot longer than
-those from the logging-activity PC.
-
-
-\subsection{Resolving Resource Constraints of Streams}
-\subsubsection{Limited number of streams}
-
+\subsection{Limitation 2: Small Number of Available Streams}
 It is advantageous to support a large number of streams in order to manage data with different lifetime characteristics as distinct streams.
 Therefore, the multi-stream specification defines up to 65536 streams [].
 However, the number of streams actually supported by an SSD that implements the specification is limited to 4 to 16[].
@@ -177,94 +114,7 @@ For each active point, it is necessary to allocate separate flash blocks.
  As the number of streams increases, it causes a decrease in overprovision area of SSD.
 However, since the overprovisioning area of the SSD is limited, if the number of streams becomes too large, there may be a problem of increase of WAF due to overprovision reduction. 
 In the case of streams over the number of overprovisioned blocks, flash block allocation  is not possible.
- 
+As a result, this makes stream mapping even more difficult.
 
-\subsubsection{I/O activity with large lifetime variance}
-For most PCs, their lifetime distributions tend to have small variances.  
-However, we observed that a few outlier PCs which have large lifetime variations. 
-For example, when multiple I/O contexts are covered by the same write system function, 
-the corresponding PC may represent several I/O contexts whose data lifetimes are quite different.   
-Such a case occurs, for example, 
-in the compaction module of RocksDB.
-RocksDB maintains
-several levels, L1, ..., L$n$, in the persistent storage, except for L0 (or a
-memtable) stored in DRAM.  Once one level, say L2, becomes full, all the data
-in L2 is compacted to a lower level, i.e., L3.  It involves moving data from L2
-to L3, along with the deletion of the old data in L2.  In the
-LSM tree~\cite{LSM}, a higher level is smaller than a lower level 
-(i.e., the size of (L2) $<$ the size of (L3)). 
-Thus, data stored in a higher level is invalidated more frequently than those kept
-in lower levels, thereby having shorter lifetimes.
-
-%Once the L1 becomes full,
-%\textit{all} the data kept in the L1 are moved to the L2 by the compaction
-%module.  The same operation is applied to the other levels (i.e., L3, ...,
-%L$n-1$).  The compaction involves reading and writing data from a higher level
-%(e.g., L1) to a lower level (e.g., L2).  The data in a higher level (e.g., L1)
-%is then removed.  
-
-%While the program context can be used as a useful indicator that determines the
-%lifetime of data, we also observe that the same PC could generate data 
-%with diverged lifetimes. One of the representative examples is the compaction
-%module of RocksDB. RocksDB maintains several levels, L1, ..., L$n$, in the
-%persistent storage, except for L0 (or a memtable) stored in DRAM.  Data flushed
-%from the memtable are first written to the L1.  Once the L1 becomes full,
-%\textit{all} the data kept in the L1 are moved to the L2 by the compaction
-%module.  The same operation is applied to the other levels (i.e., L3, ...,
-%L$n-1$).  The compaction involves reading and writing data from a higher level
-%(e.g., L1) to a lower level (e.g., L2).  The data in a higher level (e.g., L1)
-%is then removed.  In the LSM-tree, a higher level is smaller than a lower
-%level. Thus, data stored in a higher level is invalidated sooner than data kept
-%in lower levels, thereby having much shorter lifetimes.
-
-Unfortunately, in the current RocksDB implementation, the compaction step is supported 
-by the same execution path (i.e., the same PC) regardless of the level.
-Therefore, the PC for the compaction activity cannot effectively separate data with 
-short lifetimes from one with long lifetimes.
-Fig.~\ref{fig:compaction}(a) shows 
-the lifetime distribution collected from the compaction-activity PC.  
-Since this distribution includes lifetimes of data written from all the levels, 
-its variance is large.  
-When we manually separate the single compaction step into several per-level compaction steps, 
-as shown in Figs. 5(b) and 5(c), the lifetime distributions of per-level compaction steps 
-show smaller variances.   
-In particular, L2 and L3 show distinct lifetime distributions from that of L4.
-Data from L2 and L3 are likely to have shorter lifetimes, while L4 has generally
-long-lived data as shown in Fig. 5(d).
-
-\begin{figure}[!t]
-\centering
-%\vspace{-7pt}
-\hfill
-\subfloat[compaction: all levels]{\includegraphics[width=0.19\textwidth]{figure/pc_3}}
-	\hspace{2pt}
-\subfloat[compaction: L2]{\includegraphics[width=0.19\textwidth]{figure/type_4}}  % data from 4/03040047
-\hfill
-\vspace{-1pt}
-\subfloat[compaction: L3]{\includegraphics[width=0.19\textwidth]{figure/type_5}}
-	\hspace{2pt}
-\subfloat[compaction: L4]{\includegraphics[width=0.19\textwidth]{figure/type_6}}
-%\vspace{-10pt}
-%\caption{The lifetime distribution of the compaction activity.} 
-\caption{Lifetime distributions of the compaction activity at different levels.} %shane part
-\label{fig:compaction}
-%\vspace{-20pt}
-\end{figure}
-
-\subsubsection{Separating long-lived data during GC}
-Since it is difficult to separate data with different lifetimes within the same PC 
-(as in the compaction-activity PC), we devised a two-phase method that decides SSD 
-streams in two levels: the main stream ID in a host level and the substream ID in an SSD level.
-Conceptually, long-lived data in the main stream are moved to its substream to 
-separate from (future) short-lived data of the main stream.
-Although moving data to the substream may increase WAF,
-the overhead can be hidden if we restrict the substream move during GC only.
-Since long-lived data (i.e., valid pages) in a victim block are moved to a free block during GC, 
-they can be moved to the substream by changing the target block.
-For instance, \textsf{\small PCStream} assigns the compaction-activity PC {\it pID} to a
-main stream {\it sID} for the first phase.
-To separate the long-lived data of {\it pID} (e.g., L4 data) 
-from future short-lived data of {\it pID} (e.g., L1 data), 
-valid pages of the {\it sID} are assigned to its substream for the second phase during GC.
-
-
+\subsection{Limitations 3: Heterogeneous Number of Streams Among Different SSDs}
+... SSDs have different number of SSDs $->$ Stream managment should be revised whenever SSDs are replaced.

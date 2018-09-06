@@ -41,33 +41,41 @@
 %\thispagestyle{empty}
 \pagestyle{empty}
 \subsection*{Abstract}
-Multi-streamed SSDs, when their streams are properly managed, 
-can significantly improve both the performance and lifetime of flash-based SSDs.  
-However, most existing stream management techniques
-require manual stream allocation for a small number of streams, thus making 
-a wide adoption of multi-streamed SSDs in practice difficult.  
+Multi-streamed SSDs
+can significantly improve both the performance and lifetime of flash-based SSDs
+when their streams are properly managed.  
+However, current multi-streamed SSDs have several limitations for their wide adoption.   
+Existing stream management techniques are not fully automatic, 
+thus requiring manual stream allocation from application developers.  
+The number of available streams in multi-streamed SSDs is small, making efficient stream management even more challenging.  
+Furthermore, when an SSD is changed with a different number of streams, 
+application developers should modify their stream management implementation.
 In this paper, we propose a {\it fully-automatic} stream
-management approach which removes the existing major hurdles for multi-streamed SSDs.  
+management approach which effectively overcome the existing limitations of multi-streamed SSDs. 
 First, we present  an automatic stream management technique, PCStream, which requires 
 no manual coding at all from existing applications.   
-PCStream is based on our observation that data lifetimes can be reliably predicted
+PCStream is based on our observation that data lifetimes can be effectively managed
 using write program contexts.
-By extracting program contexts during runtime, PCStream automates the data-to-stream mapping.  
-When data mapped to the same stream show large differences in their lifetimes,
-PCStream separates the long-lived data of the current stream to 
-another stream during garbage collection (GC).   
-In order to support stream reallocation efficiently during garble collection, 
-we propose {\it GC-only streams} for multi-streamed SSDs.   
-Taking advantage of its GC-only property, we can increase the number of SSD streams 
-significantly by overcoming the existing resource constraint on implementing streams.  
+By extracting program contexts during runtime, PCStream automates 
+the program context to stream mapping using a clustering method.
+In order to effectively increase the number of streams, we propose a new type of streams, 
+called internal streams, in addition to existing streams that can be considered as external streams.  
+Unlike external streams, internal streams are not constrained by the SSD resource budget in 
+their implementation so that the number of internal streams are easily increased.   
+We use internal streams only for garbage collection.  
+When data mapped to the same stream show large differences in their lifetimes, 
+PCStream separates the long-lived data of the current stream to an internal stream  
 By using GC-only streams, we can easily separate streams with
 different lifetimes without affecting the overall performance.    
-Our evaluations on real SSDs show that PCStream can reduce ...
+Our evaluations on real SSDs show that PCStream can reduce the write amplification factor by up to 58\% 
+without modifying the application.
 
 
 
 \input{introduction}
 \input{motivation}
+\input{programcontext}
+\input{internalstream}
 \input{pcstream}
 \input{experiment}
 \input{relatedwork}
