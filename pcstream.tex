@@ -1,13 +1,7 @@
-\section{Design of \textsf{PCStream}}
-In this section, we describe in detail the proposed automatic stream management technique, %shane part
+\section{Design and Implementation of \textsf{PCStream}}
+In this section, we describe in detail the proposed automatic stream management technique,
 \textsf{\small PCStream}.  We first explain how we automatically extract PCs during
 runtime and describe how multiple PCs are mapped to streams in an SSD.
-In order to mitigate the side effect of a few outlier PCs with large lifetime variances, 
-we use internal streams based on a two-phase stream assignment technique.
-%{\it The PC extractor module}, which is implemented in the ... as part ... of a
-%system call handler, computes a PC signature (i.e., a sum of program counter
-%values) for each write-related system function. 추가 동작 설명..
-
 
 Fig.~\ref{fig:architecture} shows an overall organization of \textsf{\small PCStream}.
 \textit{The PC extractor module}, which is implemented in the Linux kernel as
@@ -49,7 +43,8 @@ WriteLevel0Table()} functions.)
 \begin{figure}[t]
 	\centering
 	%\vspace{-10pt}
-	\includegraphics[width=0.6\linewidth]{figure/architecture4}
+	%\includegraphics[width=0.6\linewidth]{figure/architecture4}
+	\includegraphics[width=0.6\linewidth]{figure/overview}
 	%\vspace{-9pt}
 	\caption{An overall architecture of \textsf{\small PCStream}.}
 	\label{fig:architecture}
@@ -96,12 +91,20 @@ cannot follow the same execution path to write system functions.
 (If they do, they are the same PC.) In our evaluation
 with a 3.4 GHz CPU machine, the performance overhead of the restricted scan was
 almost negligible, taking only 300-400 $n$sec per write system call.
-\\
-+ JVM (cassandra) will be added /  mmap (mongo DB), internal buffer (mysql) - future work \\ \\
+
+\subsection{PC extraction for indirect writes}
+{\color{blue}추가: write system call을 직접 호출하지 않는 indirect write을 하는 application에 대해서도 확장.
+예를 들어, cassandra와 같이 JVM 기반의 응용은 write system call을 직접 호출하는 대신, Java가 제공하는 interface
+를 사용하여 간접적으로 쓰기 수행. 이 경우, Java interface를 통해 쓰기 수행 시, PC extractor를 수행하고
+얻은 PC 값을 system call에 전달하여 PC를 얻을 수 있음.
+즉, 데이터가 만들어진 context를 정확히 파악할 수 있는 계층에서 PC를 계산함.
+이와 비슷한 mmap이나 프로그램 내부 buffer를 사용하는 case에 대해서도 위와 비슷한 접근을 할 수 있지만, 
+future work으로 남김.}\\
 
 \subsection{PC lifetime management}
-+ maintaining PC information for repeated executing application (hashing) \\ \\
 The prediction of PC lifetimes is rather complicated. 
+{\color{blue}수정: 데이터 lifetime은 쓰기 request가 issue된 때 부터 해당 주소가 다시 write되거나 
+TRIM command에 의해 삭제될 때 까지로 정의된다.}
 The data lifetime of the append-only workload is defined 
 from when a write request is issued until the TRIM command~\cite{TRIM} is issued to 
 the corresponding address.
@@ -109,9 +112,17 @@ In order to measure the lifetime of data, the lifetime analyzer
 records the write time and PC value for each write request using its LBA.
 Upon receiving the TRIM command, the lifetime analyzer can compute the 
 lifetime of the corresponding data using the recorded information.
+{\color{blue} 추가: lifetime 관리의 부하를 줄이기 위해 최적화를 적용함.
+device 전체 LBA 공간에 대해 쓰여진 시간 정보를 유지하는 것은 메모리 부하가 크기 때문에,
+몇 MB 단위로 관리함.}
 Note that, the
 same PC may generate multiple data streams with different lifetimes.
 We take the average lifetime as the PC's lifetime.
+
+{\color{blue} 추가: Section 3에서 언급했듯이, PC는 virtual address 기반으로 계산되므로
+한 프로그램의 반복적 수행은 동일한 PC가 생성됨.
+프로그램의 수행 사이에도 수명 정보를 유지할 수 있도록
+발생한 PC와 그 PC의 수명 정보를 caching하는 모듈이 추가됨.}
 
 \subsection{Mapping PCs to SSD streams}
 
@@ -119,7 +130,9 @@ The last step in \textsf{\small PCStream} is to map
 a group of PCs with similar lifetimes to an SSD stream.
 This is because each SSD supports a limited number of stream IDs. For
 example, SSDs used in \textsf{\small FStream}~\cite{FStream} and \textsf{\small AutoStream}~\cite{AutoStream}
-support only 9 and 16 streams, respectively. To properly group multiple PCs,
+support only 9 and 16 streams, respectively. 
+{\color{blue} 수정: PC cluster는 k-means 알고리즘을 사용하여 비슷한 수준의 수명을 가진 PC들을 cluster 함.}
+To properly group multiple PCs,
 the PC-to-stream mapper employs a simple 1-D clustering algorithm. 
 In order to cluster PCs with similar lifetimes, the mapper calculates the 
 lifetime difference between PCs.
@@ -128,8 +141,8 @@ The mapper repeats this clustering step until all the PCs are assigned to their 
 For adapting to changing
 workloads, reclustering operations should be regularly performed. Since the
 number of PCs created by applications is not limited, the clustering algorithm
-must be efficient enough to quickly handle many PCs. Our goal in this work is
-to confirm the feasibility of using PCs, so we leave
-those issues as our future work.
+must be efficient enough to quickly handle many PCs. 
+{\color{blue} 추가: cluster 수행 횟수를 줄이기 위해 관리하는 PC의 list를 만들어 
+새로운 PC가 추가되었을 때만 알고리즘을 수행함.}
 
 

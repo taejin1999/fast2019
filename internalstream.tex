@@ -18,6 +18,9 @@ LSM tree~\cite{LSM}, a higher level is smaller than a lower level
 Thus, data stored in a higher level is invalidated more frequently than those kept
 in lower levels, thereby having shorter lifetimes.
 
+In order to mitigate the side effect of a few outlier PCs with large lifetime variances, 
+we use internal streams based on a two-phase stream assignment technique.
+
 %Once the L1 becomes full,
 %\textit{all} the data kept in the L1 are moved to the L2 by the compaction
 %module.  The same operation is applied to the other levels (i.e., L3, ...,
