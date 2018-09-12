@@ -44,31 +44,28 @@
 Multi-streamed SSDs
 can significantly improve both the performance and lifetime of flash-based SSDs
 when their streams are properly managed.  
-However, current multi-streamed SSDs have several limitations for their wide adoption.   
-Existing stream management techniques are not fully automatic, 
-thus requiring manual stream allocation from application developers.  
-The number of available streams in multi-streamed SSDs is small, making efficient stream management even more challenging.  
-Furthermore, when an SSD is changed with a different number of streams, 
-application developers should modify their stream management implementation.
-In this paper, we propose a {\it fully-automatic} stream
-management approach which effectively overcome the existing limitations of multi-streamed SSDs. 
-First, we present  an automatic stream management technique, PCStream, which requires 
-no manual coding at all from existing applications.   
+However, existing stream management techniques do not adequately 
+support the multi-streamed SSDs for their wide adoption.
+No existing stream management technique works in a {\it fully automatic} fashion 
+for {\it general} I/O workloads including modern append-only workloads.  
+Furthermore, the limited number of available
+streams in multi-streamed SSDs makes it difficult to effectively manage streams 
+when a large number of different streams are required.
+In this paper, we propose a fully automatic stream
+management approach which works efficiently for general I/O workloads.
+Our technique, PCStream, requires no code change in existing applications by 
+handling all the stream management tasks in the kernel level.
 PCStream is based on our observation that data lifetimes can be effectively managed
-using write program contexts.
+at the write program contexts.
 By extracting program contexts during runtime, PCStream automates 
 the program context to stream mapping using a clustering method.
-In order to effectively increase the number of streams, we propose a new type of streams, 
-called internal streams, in addition to existing streams that can be considered as external streams.  
-Unlike external streams, internal streams are not constrained by the SSD resource budget in 
-their implementation so that the number of internal streams are easily increased.   
-We use internal streams only for garbage collection.  
-When data mapped to the same stream show large differences in their lifetimes, 
-PCStream separates the long-lived data of the current stream to an internal stream  
-By using GC-only streams, we can easily separate streams with
-different lifetimes without affecting the overall performance.    
+In order to overcome a limitation on the number of supported streams, we propose a new 
+type of streams, called internal streams, whose implementation is not restricted by 
+the SSD-internal hardware resource budget.
+We dedicate internal streams only for garbage collection so that different streams 
+can be effectively separated for higher performance.
 Our evaluations on real SSDs show that PCStream can reduce the write amplification factor by up to 58\% 
-without modifying the application.
+for various modern I/O workloads.
 
 
 

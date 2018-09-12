@@ -1,5 +1,5 @@
 \section{Limitations of Existing Stream Management Techniques}
-\subsection{Limitation 1: No Fully Automatic Stream Management}
+\subsection{No Automatic Stream Management for General I/O Workloads}
 
 \subsubsection{Shortcomings of existing techniques}
  ... Shortcomings of existing techniques: no fully automatic solution yet.  App should assign virtual stream...
@@ -89,7 +89,7 @@ However, owing to considerable implementation efforts required to modify
 individual applications, this approach is not widely used in practice.
 \end{comment}
 
-\subsection{Limitation 2: Small Number of Available Streams}
+\subsection{Limit to the Number of Streams}
 It is advantageous to support a large number of streams in order to manage data with different lifetime characteristics as distinct streams.
 Therefore, the multi-stream specification defines up to 65536 streams [].
 However, the number of streams actually supported by an SSD that implements the specification is limited to 4 to 16[].
@@ -116,5 +116,3 @@ However, since the overprovisioning area of the SSD is limited, if the number of
 In the case of streams over the number of overprovisioned blocks, flash block allocation  is not possible.
 As a result, this makes stream mapping even more difficult.
 
-\subsection{Limitations 3: Heterogeneous Number of Streams Among Different SSDs}
-... SSDs have different number of SSDs $->$ Stream managment should be revised whenever SSDs are replaced.
