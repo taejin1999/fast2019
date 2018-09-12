@@ -78,22 +78,22 @@ long-lived data as shown in Fig. 5(d).
 
 \subsection{Low resource requirement of internal streams}
 
-In Section 2.2.1, we describe various resource overheads that limit the number of external streams.
+In Section 2.2, we describe various resource overheads that limit the number of external streams.
 In the case of an internal stream used for internal data migration of SSD, 
-it has a relatively small resource overhead due to its distinguishing characteristics from the external stream.
+it has a relatively small resource overhead due to its distinguishing characteristics from the external stream
+and it can be used to manage the lifetime variance within streams.
 
-Unlike external streams, which are handled directly by host requests,
-since the internal stream can be processed as a background operation, 
-performance degradation may not occur even if the data structure is located in a relatively slow memory.
-However, the saturation condition, which requires GC to be continuously executed during write processing, 
-may cause performance degradation due to relatively slow memory usage.
+Unlike external streams, which require host requests to be handled directly in the foreground,
+internal streams can be handled as background operations, 
+so even if the data structures of internal streams are located in relatively slow memory, 
+performance may not suffer. 
+Under saturated conditions, which require concurrent processing of GC while processing a host write request, performance degradation may occur if slower memory is used in the internal stream, but performance degradation is small compared to using slow memory for external streams.
 
-With regard to power resources, buffering can be used for flash parallelism even during data migration, but there is a big difference in that no power resource is required to guarantee data integrity.
-In the case of buffering data for host write, if data is not stored in flash when power off, data is lost. 
-However, in the case of buffering data during data migration, since the original data always exists in the source block of migration, there is no problem in ensuring data integrity without special handling or power resource requirement.
+With regard to power resources, the buffering mechanism can be used for internal streams to maximize flash parallelism, but there is a big difference that no power resource is required to guarantee data integrity of buffered data.
+Buffered data of host write will be lost if the data is not stored during power off handling.
+However, the buffered data of internal migration doesn't need to be saved during power off handling. Because the original data always exists in the source block of migration. Therefore, there is no problem in ensuring data integrity without special handling or power resource requirement.
 
-The increase of the active point for data migration has the problem that WAF might be increased by reducing the overprovision area. 
-However, in most workloads, the benefit of using WAF reduction with multiple internal streams in data migration has the advantage of offsetting the increase in WAF due to overprovision area reduction and lowering the overall WAF.
+The increase of the active point for data migration has the same problem that WAF might be increased by reducing the overprovision area. However, in most workloads, when multiple active points are used for the internal stream, it helps to better manage the lifetime variations within the stream, thereby reducing overall WAF.
 
 \subsection{Internal Streams: Separating long-lived data during GC}
 Since it is difficult to separate data with different lifetimes within the same PC 
