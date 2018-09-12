@@ -1,9 +1,24 @@
 \section{Limitations of Existing Stream Management Techniques}
 \subsection{No Automatic Stream Management for General I/O Workloads}
+\subsubsection{Manual stream management techniques}
 
-\subsubsection{Shortcomings of existing techniques}
- ... Shortcomings of existing techniques: no fully automatic solution yet.  App should assign virtual stream...
-
+The original design of a multi-streamed SSD can have more
+than one open stream maintained inside the device, while the
+application layer manages the stream open/close and maps data to an appropriate stream
+~\cite{MultiStream, Level, vStream}.
+Application developers assign stream ID based on their knowledge of
+data temperature through a system call and the operating
+system passes a stream ID down to the device. However,
+this approach assumes the application developer is aware of the data
+temperature and the stream related device information. 
+Although \textsf{\small FStream}~\cite{FStream} can allocate streams to different metadata
+at the file system layer, knowledge for application is still required when separating
+user data such as log files of Cassandra.
+Furthermore, these manual techniques except \textsf{\small vStream}~\cite{vStream} assume 
+that the number of streams in an SSD is not changing, 
+thus requiring manual modifications whenever the number of streams in the SSD changes.
+In order to handle the problems of manual techniques, an automatic stream management
+technqiue is highly required.
 
 \subsubsection{LBA-based technique's problems}
 Many existing data separation techniques such as~\cite{AutoStream, HotCold} 
@@ -55,44 +70,44 @@ for a specific 1-MB chunk with 256 pages.
 As shown in Fig.~\ref{fig:lba_lifetime}(b), 
 for the given chuck, data lifetimes vary in a random fashion
 (although some temporal locality is observed).
-\begin{comment}
 Over the logical time, the lifetime of data written to the chunk 
 varies in an unpredictable fashion.  
 For example, at the logical time 10, the lifetime was 1 but it increases about 
 2.6 million around the logical time 450 
 followed by a rapid drop around the logical time 600. 
-\end{comment}
 Our illustration using RocksDB strongly suggests that under append-only
 workloads, LBAs are not useful in deciding data lifetimes.
 
 
-\begin{comment}
-In developing PCStream, we started from a simple question: 
-how can we extract I/O context from an application? 
-For example, in RocksDB, logging, flushing and compaction can be regarded
-as different I/O contexts.
-RocksDB appends write-ahead logs to storage to ensure data
-persistence.  Those logs have short lifetimes because they are quickly deleted
-after original data are persistently stored.
-The flush module (which materializes the content of a memtable in
-DRAM, called an L0 table, to an L1 table in the storage) generates data
-with relatively short lifetimes. This is because an L1 table will be flushed to
-an L2 table and be removed in the near future. Conversely, a compaction module
-writes long-lived data that are unlikely to be removed for a long time.
+\begin{table}[b]
+	\caption{Limitations of existing schemes}
+	\label{tab:limitation}
+	\begin{center}
+		\begin {tabular}{cccc}
+		\hline
+                   		& automatic & adaptable & general workload \\
+		\hline \hline
+		OriginalTech.   &    x      &    x      &    o    \\
+		\hline
+		vStream         &    x      &    o      &    o    \\
+		\hline
+		AutoStream      &    o      &    o      &    x    \\
+		\hline
+	\end{tabular}
+\end{center}
+\end{table}
 
-The above observation implies that, if we are able to know the detailed
-behaviors of append-only applications, data with different lifetimes can be
-isolated in separate streams in an SSD. As mentioned before, a common
-solution~\cite{MultiStream} to realizing this is manually modify an application
-code so that each module assigns a unique stream ID to data it generates.
-However, owing to considerable implementation efforts required to modify
-individual applications, this approach is not widely used in practice.
-\end{comment}
+Table~\ref{tab:limitation} summarizes the limitations of existing techniques. 
+In manual techniques, developers can allocate proper streams while they get 
+high burden. On the other hands, automatic technique is flexible
+but it does not work well when its assumption of the workload is broken. Our goal in this paper 
+is to develop a automatic technique for general workload.
+
 
 \subsection{Limit to the Number of Streams}
 It is advantageous to support a large number of streams in order to manage data with different lifetime characteristics as distinct streams.
 Therefore, the multi-stream specification defines up to 65536 streams~\cite{T10, NVMe}.
-However, the number of streams actually supported by an SSD that implements the specification is limited to 4 to 16~\cite{MultiStream, NoSQLDB, AutoStream}.
+However, the number of streams actually supported by an SSD that implements the specification is limited to 4 to 16~\cite{MultiStream, Level, AutoStream}.
 This is a limitation that occurs because there are restrictions on the resource required to implement multi-stream. It can be divided into memory, power, and overprovision resource.
 
 First, memory resource may limit the number of multi-stream.
