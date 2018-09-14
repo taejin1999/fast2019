@@ -1,6 +1,6 @@
 \section{Design and Implementation of \textsf{PCStream}}
 
-\begin{figure}[t]
+\begin{figure}[b]
 	\centering
 	%\vspace{-10pt}
 	%\includegraphics[width=0.6\linewidth]{figure/architecture4}
@@ -73,7 +73,7 @@ for improving the efficiency of register allocation.  One example is a {\tt
 pointer to be used as a general-purpose register, but makes it difficult for us
 to back-track return addresses along the call chains.  
 
-\begin{figure}[b]
+\begin{figure}[t]
 %	\vspace{-10pt}
 	\centering
 	%\vspace{-8pt}
@@ -102,27 +102,45 @@ is effective in distinguishing different PCs; it is very unlikely that two
 different PCs follow exactly the same execution path to the \textsf{\small
 write()} system call.  In our evaluation with a 3.4 GHz CPU machine, the
 overhead of the restricted scan was almost negligible, taking only 300-400
-$n$sec per \textsf{\small write()} call.
+$n$sec per \textsf{\small write()} system call.
 
 \subsection{PC extraction for indirect writes}
-{\color{blue}
-앞서 언급한 방식은 write system call을 직접 호출하는 응용에 효과적이지만,
-write system call을 직접 호출하지 않고 indirect write을 하는 응용에 대해서는 효과가 없다.
-예를 들어, cassandra와 같이 JVM 기반의 응용은 write system call을 직접 호출하는 대신, Java가 제공하는 interface
-를 사용하여 간접적으로 쓰기를 수행 한다.
-이 경우, write system call 수준에서 PC를 추출하면, JVM 상에서 어떤 응용이 수행되고 있는지와는 관계없이 Java의
-I/O를 담당하는 프로세스의 call stack만을 얻기 때문에 응용 프로그램의 I/O activity를 구분하려는 목적을 달성할 수 없다.
-이러한 문제를 해결하기 위해서는 데이터가 만들어진 context를 정확히 파악할 수 있는 layer에서 PC가 계산 되어야 한다.
-위의 예시에서는, system call layer 대신 Java interface를 통해 쓰기 요청을 전달 받을 때, PC extractor를 수행하면 의미있는
-I/O activity를 구분할 수 있고 우리는 JDK를 수정하여 이러한 접근이 동작함을 확인하였다.
-또 다른 indirect write case로, 프로그램 내부에 buffer를 유지하면서 이를 flushing하는 별도의 thread가 존재하는 경우가 있다.
-이 역시 I/O activity를 구분할 수 있는 buffer에 데이터를 기록하는 시점에 구분되기 때문에, system call layer에서 PC를 추출하면 
-의미 없는 flushing thread의 call stack만을 얻게 된다. 
-그러나 이 case는 I/O activity가 구분되는 지점이 프로그램 내부의 function call로 이루어지기 때문에 프로그램이 이를 
-알려주지 않는 이상 system 수준에서 이를 직접적으로 파악하기 어렵다. 
-프로그램을 수정하지 않고 buffering의 I/O activity를 구분하는 문제는 이 논문에서 다루기에는
-너무 복잡하기 때문에 future work으로 남긴다.
-}
+One limitation of using PCs to extract I/O characteristics is that it only
+works with C/C++ programs that \textit{directly} call write-related system
+calls.  Many programs, however, often invoke write system calls
+\textit{indirectly} through intermediate layers, which makes it difficult to
+track program contexts.
+
+The most representative example may be Java programs, such as Cassandra and
+Hadoop, that run inside a Java Virtual Machine (JVM). Java programs invoke
+write system calls via a native library written in C, so the PC extractor fails
+to capture I/O activities of application logics because it is unable to see the
+stack of Java programs.  Another example is C/C++ programs that use a write
+buffer dedicated to dealing with writes from application logics. For example,
+in MySQL~\cite{ref} and PostgreSQL~\cite{ref}, all the writes are first
+destined for a write buffer, and then flush threads materialize buffered data
+to persistent storage later.  In that case, the PC extractor only captures PCs
+of flush threads since application logics run in other threads with different
+stacks.
+
+The problem of indirect writes can be addressed by collecting PC signatures at
+the front-end interface of an intermediate layer that accepts write requests
+from application logics. In case of Java programs, a native library can be
+modified to capture write requests and computes PC signatures. Once a native
+library is modified, it automatically gathers PC signatures without modifying
+application code. Fig.~\ref{fig:java} illustrates how \textsf{PCStream}
+collects signatures from Java programs.  \textcolor{red}{(TODO: Java 경우에
+대한 그림과 설명이 추가되면 좋을 듯)}
+
+Unlike Java, there is no a straightforward way to support PC collection for
+applications with write buffers. This is because the implementation of write
+buffering is different depending on applications, so additional efforts are
+needed to manually modify code. However, this manual modification is only
+limited to a write buffering module, and application logics themselves don't
+need to be edited or annotated.
+
+
+
 
 \subsection{PC lifetime management}
 {\color{blue}Lifetime manager는 생성된 데이터의 수명을 계산하고 이를 PC 별로 구분하여 관리한다.
