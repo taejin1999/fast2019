@@ -25,7 +25,7 @@
 \begin{document}
 
 \title{
-\bf Fully Automatic Stream Management for Multi-Streamed SSDs \\ Using Program Contexts}
+\bf Towards Fully Automatic Stream Management for Multi-Streamed SSDs \\ Using I/O Program Contexts}
 
 %\numberofauthors{1}
 %
@@ -50,23 +50,22 @@ No existing stream management technique works in a {\it fully automatic} fashion
 for {\it general} I/O workloads including modern append-only workloads.  
 Furthermore, the limited number of available
 streams in multi-streamed SSDs makes it difficult to effectively manage streams 
-when a large number of different streams are required.
+when a large number of streams are required.
 In this paper, we propose a fully automatic stream
-management approach which works efficiently for general I/O workloads.
-Our technique, PCStream, requires no code change in existing applications by 
-handling all the stream management tasks in the kernel level.
-PCStream is based on our observation that data lifetimes can be effectively managed
-at the write program contexts.
-By extracting program contexts during runtime, PCStream automates 
-the program context to stream mapping using a clustering method.
+management framework which can work efficiently for general I/O workloads.
+The propoased technique, PCStream, is based on our observation that data lifetimes 
+can be effectively managed at the write program contexts which can works
+as a virtual stream.
+By extracting program contexts during run time in the kernel, PCStream automates 
+the stream mapping task by allocating virtual streams to physical
+streams using a clustering method.
 In order to overcome a limitation on the number of supported streams, we propose a new 
 type of streams, called internal streams, whose implementation is not restricted by 
 the SSD-internal hardware resource budget.
-We dedicate internal streams only for garbage collection so that different streams 
-can be effectively separated for higher performance.
-Our evaluations on real SSDs show that PCStream can reduce the write amplification factor by up to 58\% 
-for various modern I/O workloads.
-
+We dedicate internal streams only for garbage collection so that streams 
+can be further separated based on data lifetimes.
+Our evaluations on real SSDs show that PCStream can reduce the write amplification factor 
+by up to 58\% for various modern I/O workloads.
 
 
 \input{introduction}
