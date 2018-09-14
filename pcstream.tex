@@ -49,7 +49,7 @@ policy. Data belonging to a same group have a same stream ID.
 %is generally less than the number of PCs in host applications.
 
 \subsection{Automatic PC computation}
-As mentioned earlier, a PC signature defined to be the sum of program counter
+As mentioned earlier, a PC signature is defined to be the sum of program counter
 values along the execution path of function calls that finally reaches a
 write-related system function.  In theory, program counter values in the
 execution path can be extracted in a relatively straightforward manner.  Except
@@ -139,43 +139,47 @@ needed to manually modify code. However, this manual modification is only
 limited to a write buffering module, and application logics themselves don't
 need to be edited or annotated.
 
-
-
-
 \subsection{PC lifetime management}
-{\color{blue}Lifetime manager는 생성된 데이터의 수명을 계산하고 이를 PC 별로 구분하여 관리한다.
-Lifetime Manager의 목적은 PC별 수명의 패턴을 파악하여 stream 할당의 기준을 만드는 것이다.
-다양한 평가 결과, 우리는 동일한 I/O activity의 데이터라도 update 혹은 삭제 시기에 따라
-개별적 데이터의 수명은 조금씩 달라지지만, 고유한 수명 패턴은 유지되는 것을 확인하였다.
-따라서 lifetime manager는 수명의 정확한 값을 추구하기 보다는 수명의 대략적인 패턴을 파악하는 것을 목표로 한다.
+The responsibility of the PC-lifetime manager is for estimating the lifetime of
+data associated with PC signatures. As mentioned in Section
+\textcolor{red}{XX}, data belonging to an identical PC signature could have
+slightly different lifetimes, but their lifetime trends are almost the same.
+This means that PC signatures is useful to roughly estimate the lifetime of
+given data, but more accurate data separation is required for data belonging to
+the same PC.  This issue will be discussed in Section \textcolor{red}{5.5} in
+detail.
 
-데이터 lifetime은 쓰기 request가 issue된 때 부터 해당 주소가 다시 write되거나 
-TRIM command에 의해 삭제될 때 까지로 정의된다.}
-%The data lifetime of the append-only workload is defined 
-%from when a write request is issued until the TRIM command~\cite{TRIM} is issued to 
-%the corresponding address.
-In order to measure the lifetime of data, the lifetime analyzer 
-records the write time and PC value for each write request using its LBA.
-Upon receiving the TRIM command or updating write request, the lifetime analyzer can compute the 
-lifetime of the corresponding data using the recorded information.
-{\color{blue} 
-그러나 device 전체 LBA 공간에 대해 쓰여진 시간 정보를 유지하는 것은 메모리 부하가 크기 때문에,
-우리는 1MB 크기의 chunk 단위로 나누어 관리하는 최적화 기법을 사용한다.
-}
-Note that, the
-same PC may generate multiple data streams with different lifetimes.
-We take the average lifetime as the PC's lifetime.
+\textbf{Lifetime estimation:}
+In \textsf{PCStream}, the lifetime of data is defined to be an elapsed time
+from when data are written until the data are invalided by TRIM commands or
+overwrites. Whenever a new write request comes, the PC-lifetime manager gets 1)
+a written time and 2) a PC signature, along with 3) a list of LBAs, and put
+them into a candidate table. Upon receiving TRIM commands or overwrite
+requests, \textcolor{blue}{the lifetime estimator} looks for overlapped LBAs in
+the table and if a matched LBA(s) is found, it computes an expected lifetime
+for a corresponding PC signature. The PC signature and the expected lifetime
+are then put into a PC hash table.
 
-{\color{blue} Section 3에서 언급했듯이, PC는 user stack에 존재하는 
-return address 즉, virtual address 기반으로 계산되므로
-한 프로그램을 반복적으로 수행하면 동일한 PC들을 발견할 수 있다.
-첫번째 수행 중 얻은 PC 별 lifetime 정보를 다음번 수행에서도 활용하기 위해 
-이 정보를 유지하는 cache를 사용한다.
-등장한 PC들과 그들의 lifetime 정보는 cache에 유지되고 추후 동일한 PC에 대해서는 
-누적된 수명 정보를 활용할 수 있기 때문에 좀 더 정확한 수명 판단이 가능하다.
-PC 값과 수명 값의 크기가 작기 때문에 몇십 KB의 메모리 만으로 충분히 많은 양의 데이터를 
-유지할 수 있다. 따라서 본 논문에서는 PC cache replacement 정책에 대해서는 논의하지 않는다.
-}
+As some might notice, maintaining the candidate table in DRAM could be a
+serious burden owing to its huge size. To mitigate this, the lifetime estimator
+sacrifices accuracy by increasing LBA granularity to 1~MB, instead of 4 KB.
+The candidate table is indexed by 1 MB LBA, and each table entry holds PC
+signatures and written times. Each entry could have multiple signatures and
+written times; the same PC could span across multiple entries.  If same PC has
+different lifetimes, we take the average one as PC's lifetime. Finally, if the
+table reaches a threshold size, the least recently referenced one is evicted. 
+
+\textbf{PC hash table:}
+The PC hash table keeps PC signatures and its expected lifetimes. To quickly
+retrieve expected lifetime given a PC signature, the PC hash table is managed
+through a hash data structure as its name implies. Each hash entry requires
+only 12 bytes: 64-bit for a PC signature and 32-bit for an expected lifetime.
+The size of the hash table is thus quite small, such that it can be entirely
+loaded in DRAM. Our observations say that the hash table only consumes several
+tens or hundreds of KB of DRAM.
+
+%The important thing to note here is that the PC hash table maintains that 
+
 
 \subsection{Mapping PCs to SSD streams}
 
