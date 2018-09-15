@@ -1,5 +1,35 @@
 \section{Limitations of Existing Stream Management Techniques}
 \subsection{No Automatic Stream Management for General I/O Workloads}
+\begin{table}[h]
+	\caption{Limitations of existing schemes}
+	\label{tab:limitation}
+	\begin{center}
+		\begin {tabular}{cccc}
+		\hline
+                   		& automatic & adaptable & general workload \\
+		\hline \hline
+		Manual Stream   &    x      &    x      &    o    \\
+		\hline
+		vStream         &    x      &    o      &    o    \\
+		\hline
+		AutoStream      &    o      &    o      &    x    \\
+		\hline
+	\end{tabular}
+\end{center}
+\end{table}
+
+Table~\ref{tab:limitation} summarizes the limitations of existing techniques. 
+In manual techniques, developers can allocate proper streams while the stream 
+allocation should be modified whenever the application or the device changes.
+On the other hands, automatic technique is flexible
+but it does not work well under the workload where the data lifetime is 
+difficult to predict.
+The detailed limitations will be explained in the following subsections.
+%Our goal in this paper 
+%#is to develop a fully automatic technique for general workload
+%so that all the requirements are met.
+
+
 \subsubsection{Manual stream management techniques}
 
 The original design of a multi-streamed SSD can have more
@@ -11,20 +41,23 @@ data temperature through a system call and the operating
 system passes a stream ID down to the device. However,
 this approach assumes the application developer is aware of the data
 temperature and the stream related device information. 
-Although \textsf{\small FStream}~\cite{FStream} can allocate streams to different metadata
-at the file system layer, knowledge for application is still required when separating
-user data such as log files of Cassandra.
+Although \textsf{\small FStream}~\cite{FStream} does not require application modification,
+they separate only file system metadata and can not separate application data without 
+knowledge for data temperature such as log files of Cassandra are short-lived.
 Furthermore, these manual techniques except \textsf{\small vStream}~\cite{vStream} assume 
 that the number of streams in an SSD is not changing, 
 thus requiring manual modifications whenever the number of streams in the SSD changes.
-In order to handle the problems of manual techniques, an automatic stream management
-technqiue is highly required.
+In order to handle the limitations of manual techniques, an automatic stream management
+technqiue which can avoid the application modification and adapt the number of stream change
+is highly required.
+Recenlty, AutoStream~\cite{AutoStream} is proposed to automatically manage streams 
+based on the data lifetime prediction with the access frequency of LBAs.
 
-\subsubsection{LBA-based technique's problems}
-Many existing data separation techniques such as~\cite{AutoStream, HotCold} 
-estimate the data lifetime based on the update frequency of LBAs.  
+\subsubsection{LBA-based automatic technique's problems}
+Many existing data separation techniques such as~\cite{HotCold, AutoStream} 
+estimate the data lifetime based on the access frequency of LBAs.  
 For example, \textsf{\small AutoStream}~\cite{AutoStream} assumes that, if
-some LBAs are frequently rewritten by applications, those LBAs hold hot data.
+some LBAs are frequently accessed by applications, those LBAs hold hot data.
 This LBA-based lifetime prediction 
 approach, however, does not work well with recent data-intensive 
 applications where a majority of
@@ -35,13 +68,13 @@ append-only workloads, we analyzed the write pattern of
 RocksDB~\cite{RocksDB}, which is a
 popular key-value store based on the LSM-tree algorithm~\cite{LSM}.
 Fig.~\ref{fig:lba_lifetime}(a) shows how LBAs may be related 
-to data lifetimes\footnote{The lifetime of data is defined 
+to data lifetimes in RocksDB~\cite{RocksDB}.  
+The lifetime of data in this paper is defined 
 by the logical time which is the number of writes to the device 
 between when the data is first written 
-and when the data is invalidated by an overwrite or a TRIM command.}
-in RocksDB~\cite{RocksDB}.  
+and when the data is invalidated by an overwrite or a TRIM command.
 As shown in Fig.~\ref{fig:lba_lifetime}(a), 
-there exists no strong correlation between the LBAs and lifetimes in RocksDB.  
+there is no strong correlation between LBAs and lifetimes in RocksDB.  
 This scatter plot is in sharp contrast with one for update workloads 
 where a few distinct LBA regions have short lifetimes while others 
 have very long lifetimes.
@@ -56,7 +89,7 @@ have very long lifetimes.
 	\subfloat[Lifetime patterns over time]{\includegraphics[width=0.21\textwidth]{figure/lifetime_in_chunk}}
 	%\includegraphics[width=0.9\linewidth]{figure/lba_lifetime} 
 	%\vspace{-3pt}
-	\caption{Lifetime distributions over addresses and times.} %shane part
+	\caption{Lifetime distributions of append-only workload over addresses and times.} %shane part
 	\label{fig:lba_lifetime}
 	%\vspace{-20pt}
 \end{figure}
@@ -77,38 +110,17 @@ For example, at the logical time 10, the lifetime was 1 but it increases about
 followed by a rapid drop around the logical time 600. 
 Our illustration using RocksDB strongly suggests that under append-only
 workloads, LBAs are not useful in deciding data lifetimes.
-
-
-\begin{table}[b]
-	\caption{Limitations of existing schemes}
-	\label{tab:limitation}
-	\begin{center}
-		\begin {tabular}{cccc}
-		\hline
-                   		& automatic & adaptable & general workload \\
-		\hline \hline
-		OriginalTech.   &    x      &    x      &    o    \\
-		\hline
-		vStream         &    x      &    o      &    o    \\
-		\hline
-		AutoStream      &    o      &    o      &    x    \\
-		\hline
-	\end{tabular}
-\end{center}
-\end{table}
-
-Table~\ref{tab:limitation} summarizes the limitations of existing techniques. 
-In manual techniques, developers can allocate proper streams while they get 
-high burden. On the other hands, automatic technique is flexible
-but it does not work well when its assumption of the workload is broken. Our goal in this paper 
-is to develop a automatic technique for general workload.
+Therefore, we should find new information 
+to predict data lifetimes in developing an automatic stream management techique.
 
 
 \subsection{Limit to the Number of Streams}
 It is advantageous to support a large number of streams in order to manage data with different lifetime characteristics as distinct streams.
+As explained in ~\cite{MultiStream}, the performance continues to improve until 
+the number of streams increases enough to distinguish the lifetime characteristics exists in the application.
 Therefore, the multi-stream specification defines up to 65536 streams~\cite{T10, NVMe}.
 However, the number of streams actually supported by an SSD that implements the specification is limited to 4 to 16~\cite{MultiStream, Level, AutoStream}.
-This is a limitation that occurs because there are restrictions on the resource required to implement multi-stream. It can be divided into memory, power, and overprovision resource.
+This limitation occurs due to restrictions on the resource required to implement multi-stream. The requirement can be divided into memory, power, and overprovision resource.
 
 First, memory resource may limit the number of multi-stream.
 The controller that runs the SSD provides various memories such as TCM, SRAM, and DRAM. 

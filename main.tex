@@ -46,25 +46,24 @@ can significantly improve both the performance and lifetime of flash-based SSDs
 when their streams are properly managed.  
 However, existing stream management techniques do not adequately 
 support the multi-streamed SSDs for their wide adoption.
-No existing stream management technique works in a {\it fully automatic} fashion 
-for {\it general} I/O workloads including modern append-only workloads.  
+No existing stream management technique works in a fully automatic fashion 
+for general I/O workloads including append-only workloads.  
 Furthermore, the limited number of available
-streams in multi-streamed SSDs makes it difficult to effectively manage streams 
+streams makes it difficult to effectively manage streams 
 when a large number of streams are required.
-In this paper, we propose a fully automatic stream
-management framework which can work efficiently for general I/O workloads.
-The propoased technique, PCStream, is based on our observation that data lifetimes 
-can be effectively managed at the write program contexts which can works
-as a virtual stream.
-By extracting program contexts during run time in the kernel, PCStream automates 
-the stream mapping task by allocating virtual streams to physical
-streams using a clustering method.
-In order to overcome a limitation on the number of supported streams, we propose a new 
-type of streams, called internal streams, whose implementation is not restricted by 
-the SSD-internal hardware resource budget.
-We dedicate internal streams only for garbage collection so that streams 
-can be further separated based on data lifetimes.
-Our evaluations on real SSDs show that PCStream can reduce the write amplification factor 
+In this paper, we propose a {\it fully automatic} stream
+management technique, PCStream, which can work efficiently for {\it general} I/O workloads.
+PCStream is based on the key insight that stream allocation decisions should be made on 
+dominant I/O activities. By identifying dominant I/O activities using program contexts, 
+PCStream fully automates the whole process of stream allocation 
+within the kernel with no manual work.
+In order to overcome the limited number of supported streams, we propose a new 
+type of streams, internal streams, which can be implemented at low cost.
+With internal streams, which are used only for garbage collection, 
+PCStream can effectively double the number of available streams. 
+Our evaluations on real multi-streamed SSDs show that PCStream
+outperforms highly-optimized manual stream allocations by experienced 
+programmers by reducing the garbage collection overhead 
 by up to 58\% for various modern I/O workloads.
 
 
