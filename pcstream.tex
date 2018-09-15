@@ -104,6 +104,27 @@ write()} system call.  In our evaluation with a 3.4 GHz CPU machine, the
 overhead of the restricted scan was almost negligible, taking only 300-400
 $n$sec per \textsf{\small write()} system call.
 
+\begin{figure}[t]
+\centering
+\begin{pgfpicture}
+\pgftext{\pgfimage[width=5cm,height=4cm]{scratch.png}}
+\end{pgfpicture}
+\caption{\textcolor{red}{(TODO: Java에 대한 설명이 필요)}}
+\label{fig:java}
+\end{figure}
+
+
+
+\begin{figure*}[t]
+\centering
+\begin{pgfpicture}
+\pgftext{\pgfimage[width=15cm,height=4cm]{scratch.png}}
+\end{pgfpicture}
+\caption{\textcolor{red}{(TODO: Lifetime Estimation 에서부터 SSD Stream Allocation 까지 전체 과정을 
+보여주는 그림이 추가되면 좋을 것 같음. 두 컬럼으로 길게 그려도 나쁘지 않을 듯...)}}
+\label{fig:process}
+\end{figure*}
+
 \subsection{PC extraction for indirect writes}
 One limitation of using PCs to extract I/O characteristics is that it only
 works with C/C++ programs that \textit{directly} call write-related system
@@ -178,34 +199,48 @@ The size of the hash table is thus quite small, such that it can be entirely
 loaded in DRAM. Our observations say that the hash table only consumes several
 tens or hundreds of KB of DRAM.
 
-%The important thing to note here is that the PC hash table maintains that 
-
+\textcolor{red}{
+The important thing to note here is that the PC hash table is able to capture a
+long-term history of programs' I/O behaviors in a system-wide scope.  Even for
+short-lived processes that are launched and terminated frequently, their I/O
+behaviors are collected and applied to the PC hash table.  This is because PC signatures are
+obtained by summing next instruction addresses in the code segment of process's
+virtual memory space. Thus, unless a program itself is updated, PC signatures do not change
+and are maintained identically.
+}
 
 \subsection{Mapping PCs to SSD streams}
 
-The last step in \textsf{\small PCStream} is to map
-a group of PCs with similar lifetimes to an SSD stream.
-This is because each SSD supports a limited number of stream IDs. For
-example, SSDs used in \textsf{\small FStream}~\cite{FStream} and \textsf{\small AutoStream}~\cite{AutoStream}
-support only 9 and 16 streams, respectively. 
-{\color{blue} PC cluster는 비슷한 수준의 수명을 가진 PC들을 하나의 group으로 구분하기 위해 clustering algorithm을 사용한다.
-본 연구에서는 overhead가 적고 많이 사용되는 k-means 알고리즘을 사용하였다.
-SSD가 제공하는 stream의 개수와 동일한 group을 생성하여 각 PC group을 각 stream으로 할당한다.
-}
+After estimating expected lifetimes of PC signatures, the \textsf{PC-stream
+cluster} attempts to group PCs with similar lifetimes into an SSD stream.  This
+grouping process is necessary because product SSDs only support a limited
+number of stream IDs. For example, SSDs used in \textsf{\small
+FStream}~\cite{FStream} and \textsf{\small AutoStream}~\cite{AutoStream}
+support only 9 and 16 streams, respectively; on the other hand, the number of
+unique PCs created is about \textcolor{red}{XXX}.  For grouping, the PC-stream
+cluster module uses a k-means algorithm which is lightweight and is widely used
+in many applications. For adapting to changing workloads, re-clustering
+operations should be performed regularly. \textcolor{red}{To avoid significant
+overhead, re-clustering is triggered when 10\% of the total PCs in the hash
+table have changed}.
 
-%To properly group multiple PCs,
-%the PC-to-stream mapper employs a simple 1-D clustering algorithm. 
-%In order to cluster PCs with similar lifetimes, the mapper calculates the 
-%lifetime difference between PCs.
-%Then, PCs with the smallest lifetime difference are clustered into the same PC group. 
-%The mapper repeats this clustering step until all the PCs are assigned to their PC groups.
-{\color{blue} 추가로, SSD가 지원하는 stream의 개수가 변경되는 상황에서도 reclustering을 통해
-대응이 가능하다.
-For adapting to changing workloads, reclustering operations should be regularly performed. 
-reclustering의 주기는 workload의 변화 패턴에 따라 결정될 수 있다.
-새로운 PC가 계속적으로 생성되거나 한 PC의 수명 패턴이 자주 변화할 경우 reclustering의 주기를 
-좀 더 짧게 설정하여 workload 변화를 반영한다.
-}
+\textcolor{red}{To quickly assign incoming data to a proper stream ID, we add
+another field to the PC hash table which keeps a stream ID for each PC
+signature.  When a new write request comes, a designated SSD stream ID can be
+obtained by referring to the PC hash table using request's PC value as an
+index.  }
+
+
+\subsection{\textcolor{red}{TODO: Internal stream management ???}}
+
+
+%{\color{blue} 추가로, SSD가 지원하는 stream의 개수가 변경되는 상황에서도
+%reclustering을 통해
+%대응이 가능하다.
+%reclustering의 주기는 workload의 변화 패턴에 따라 결정될 수 있다.
+%새로운 PC가 계속적으로 생성되거나 한 PC의 수명 패턴이 자주 변화할 경우 reclustering의 주기를 
+%좀 더 짧게 설정하여 workload 변화를 반영한다.
+%}
 %Since the
 %number of PCs created by applications is not limited, the clustering algorithm
 %must be efficient enough to quickly handle many PCs. 
