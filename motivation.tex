@@ -108,28 +108,16 @@ In order to support a large number of streams, the SBC-4 and NVMe revision 1.3, 
 multi-stream related specifications, allow up to 65,536 streams~\cite{T10, NVMe}.  
 However, the number of streams supported in
 commercial SSDs is quite limited, say, 4 to 16~\cite{MultiStream, Level, AutoStream}, 
-because of several implementation 
-constraints such as the memory size, backup power capacity and overprovisioning size.
+{\color{blue}
+because of several implementation constraints such as backup power capacity and the memory size.
+In the SSD, a write buffering mechanism is commonly used to manage the size difference 
+between the FTL mapping unit and the flash program unit and to efficiently utilize 
+the high-degree of SSD internal parallelism for high performance. 
+And the buffering mechanism requires a backup power resource and a fast memory resource.
 
-Since multi-stream related metadata should be accessed quickly as well as frequently, 
-most SSD controllers implement multi-stream data structures on fast memory 
-such as SRAM or TCM over more common DRAM.  
-However, most SSD manufacturers are quite sensitive in increasing the size of 
-fast memory because it may increase the overall SSD cost.   
-A limited size of fast memory, unfortunately, restricts the number of
-supported streams quite severely.
-
-The limited capacity of backup power is another main hurdle in increasing 
-the number of streams in multi-streamed SSDs.  
 In data centers or storage servers where multi-streamed SSDs are used,
 in order to guarantee the data integrity even under sudden power-off conditions, 
-SSDs use 
-{\color{blue}
-tantalum or electrolytic capacitors as a backup power source.  
-One of main use cases of the backup power is to reliably write buffered data.  
-In order to efficiently utilize the high-degree of SSD
-internal parallelism for high performance, SSDs commonly buffer small-sized 
-writes for large-sized burst writes.   
+SSDs use tantalum or electrolytic capacitors as a backup power source.  
 When a main power is suddenly failed, the backup power is used to write back the
 buffered data reliably.  
 Since the capacity of backup power is limited because of the limited PCB size and 
@@ -140,12 +128,23 @@ as the number of streams increases.
 The practical limit in the capacity of backup power, therefore, dictates the maximum
 number of streams as well.
 
-Lastly, overprovision resource may limit the number of streams.
-As the number of stream increases, the number of currently active (i.e., open)
-blocks increases because different active streams need separate active blocks.
-Therefore, as the number of streams increases, the overprovisioning area is 
-reduced in SSDs.  When the overprovisioning area gets too small, 
-GC may occur more frequently.   
-This, in turn, limits the
-maximim number of streams in practice.  
+The limited size of fast memory, such as TCM or SRAM, is another main hurdle in increasing 
+the number of streams in multi-streamed SSDs.
+Since multi-stream related metadata which includes data structes for write buffering 
+should be accessed quickly as well as frequently, 
+most SSD controllers implement multi-stream data structures on fast memory than more common DRAM. 
+Since the buffered write data is the latest data, 
+it is always necessary to check whether there is requested LBA 
+among the buffered data at the time of read request processing.
+To effectively implement this check process, a hash table or bloom filter can be used, 
+and buffered LBA information and buffer address are managed.
+Placing these data structures in slower memory is not desirable 
+because the read processing speed is greatly reduced.  
+Furthermore, these data structures are also referred to store buffered data in NAND flash, 
+the data structures must be located in fast memory for high write throughput. 
+However, most SSD manufacturers are quite sensitive in increasing the size of 
+fast memory because it may increase the overall SSD cost.   
+A limited size of fast memory, unfortunately, restricts the number of
+supported streams quite severely.
 }
+

@@ -86,17 +86,24 @@ In the case of an internal stream used for internal data migration of SSD,
 it has a relatively small resource overhead due to its distinguishing characteristics from the external stream
 and it can be used to manage the lifetime variance within streams.
 
+{\color{blue}
+With regard to power resources, the buffering mechanism can be used for internal streams to maximize flash parallelism, but there is a big difference that no power resource is required to guarantee data integrity of buffered data.
+Buffered data of host write will be lost if the data is not stored during power off handling.
+However, the buffered data of internal migration doesn't need to be saved during power off handling. Because the original data always exists in the source block of migration. 
+Therefore, there is no problem in ensuring data integrity without special handling or power resource requirement.
+
 Unlike external streams, which require host requests to be handled directly in the foreground,
 internal streams can be handled as background operations, 
 so even if the data structures of internal streams are located in relatively slow memory, 
-performance may not suffer. 
-Under saturated conditions, which require concurrent processing of GC while processing a host write request, performance degradation may occur if slower memory is used in the internal stream, but performance degradation is small compared to using slow memory for external streams.
-
-With regard to power resources, the buffering mechanism can be used for internal streams to maximize flash parallelism, but there is a big difference that no power resource is required to guarantee data integrity of buffered data.
-Buffered data of host write will be lost if the data is not stored during power off handling.
-However, the buffered data of internal migration doesn't need to be saved during power off handling. Because the original data always exists in the source block of migration. Therefore, there is no problem in ensuring data integrity without special handling or power resource requirement.
-
-The increase of the active point for data migration has the same problem that WAF might be increased by reducing the overprovision area. However, in most workloads, when multiple active points are used for the internal stream, it helps to better manage the lifetime variations within the stream, thereby reducing overall WAF.
+host request processing performance may not suffer. 
+And the data structures for internal streams do not need to be checked during 
+read request processing.
+This is due to the fact that the data managed by the internal stream is not up-to-date 
+and the source block has the same data. 
+So read performance is not affected by usage of slow memeory for internal streams.
+Under saturated conditions, which require concurrent processing of GC while processing a host write request, 
+performance degradation may occur if slower memory is used in the internal stream, but performance degradation is small compared to using slow memory for external streams.
+}
 
 \subsection{Internal Streams: Separating long-lived data during GC}
 Since it is difficult to separate data with different lifetimes within the same PC 
@@ -113,6 +120,7 @@ main stream {\it sID} for the first phase.
 To separate the long-lived data of {\it pID} (e.g., L4 data) 
 from future short-lived data of {\it pID} (e.g., L1 data), 
 valid pages of the {\it sID} are assigned to its internal stream for the second phase during GC.
+
 
 
 
