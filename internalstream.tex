@@ -48,6 +48,8 @@ Therefore, the PC for the compaction activity cannot effectively separate data w
 short lifetimes from one with long lifetimes.
 Fig.~\ref{fig:compaction}(a) shows 
 the lifetime distribution collected from the compaction-activity PC.  
+{\color{red}TODO: 추가 그림에 대한설명 \\ \\ \\ \\ }
+\begin{comment}
 Since this distribution includes lifetimes of data written from all the levels, 
 its variance is large.  
 When we manually separate the single compaction step into several per-level compaction steps, 
@@ -56,22 +58,23 @@ show smaller variances.
 In particular, L2 and L3 show distinct lifetime distributions from that of L4.
 Data from L2 and L3 are likely to have shorter lifetimes, while L4 has generally
 long-lived data as shown in Fig. 5(d).
+\end{comment}
 
 \begin{figure}[!t]
 \centering
 %\vspace{-7pt}
 \hfill
-\subfloat[RocksDB: compaction]{\includegraphics[width=0.19\textwidth]{figure/type_6}}% data from 4/03040047
+\subfloat[RocksDB: compaction]{\includegraphics[width=0.2\textwidth]{figure/type_6}}% data from 4/03040047
 	\hspace{2pt}
-\subfloat[RocksDB: L2]{\includegraphics[width=0.19\textwidth]{figure/type_4}}  
+\subfloat[RocksDB: L2]{\includegraphics[width=0.2\textwidth]{figure/type_4}}  
 \hfill
-\vspace{-1pt}
-\subfloat[sqlite: data files]{\includegraphics[width=0.19\textwidth]{figure/sqlite_long_LBA}}
+\vspace{7pt}
+\subfloat[sqlite: data files]{\includegraphics[width=0.2\textwidth]{figure/sqlite_long_LBA}}
 	\hspace{2pt}
-\subfloat[gcc: result files]{\includegraphics[width=0.19\textwidth]{figure/compile_long}}
+\subfloat[gcc: result files]{\includegraphics[width=0.2\textwidth]{figure/compile_long}}
 %\vspace{-10pt}
 %\caption{The lifetime distribution of the compaction activity.} 
-\caption{Lifetime distributions of the compaction activity at different levels.} %shane part
+\caption{Large lifetime variance I/O activities for various workloads.} %shane part
 \label{fig:compaction}
 %\vspace{-20pt}
 \end{figure}
