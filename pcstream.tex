@@ -1,6 +1,6 @@
 \section{Design and Implementation of \textsf{PCStream}}
 
-\begin{figure}[b]
+\begin{figure}[t]
 	\centering
 	%\vspace{-10pt}
 	%\includegraphics[width=0.6\linewidth]{figure/architecture4}
@@ -47,51 +47,6 @@ policy. Data belonging to a same group have a same stream ID.
 %module} clusters PCs with similar lifetimes and maps them together to the same
 %stream ID.  This mapping is required because the number of streams in an SSD
 %is generally less than the number of PCs in host applications.
-
-\begin{figure}[t]
-\centering
-\begin{pgfpicture}
-\pgftext{\pgfimage[width=5cm,height=4cm]{scratch.png}}
-\end{pgfpicture}
-\caption{\textcolor{red}{(TODO: Java에 대한 설명이 필요)}}
-\label{fig:java}
-\end{figure}
-
-\subsection{PC extraction for indirect writes}
-One limitation of using PCs to extract I/O characteristics is that it only
-works with C/C++ programs that \textit{directly} call write-related system
-calls.  Many programs, however, often invoke write system calls
-\textit{indirectly} through intermediate layers, which makes it difficult to
-track program contexts.
-
-The most representative example may be Java programs, such as Cassandra and
-Hadoop, that run inside a Java Virtual Machine (JVM). Java programs invoke
-write system calls via a native library written in C, so the PC extractor fails
-to capture I/O activities of application logics because it is unable to see the
-stack of Java programs.  Another example is C/C++ programs that use a write
-buffer dedicated to dealing with writes from application logics. For example,
-in MySQL~\cite{MySQL} and PostgreSQL~\cite{PostgreSQL}, all the writes are first
-destined for a write buffer, and then flush threads materialize buffered data
-to persistent storage later.  In that case, the PC extractor only captures PCs
-of flush threads since application logics run in other threads with different
-stacks.
-
-The problem of indirect writes can be addressed by collecting PC signatures at
-the front-end interface of an intermediate layer that accepts write requests
-from application logics. In case of Java programs, a native library can be
-modified to capture write requests and computes PC signatures. Once a native
-library is modified, it automatically gathers PC signatures without modifying
-application code. Fig.~\ref{fig:java} illustrates how \textsf{PCStream}
-collects signatures from Java programs.  \textcolor{red}{(TODO: Java 경우에
-대한 그림과 설명이 추가되면 좋을 듯)}
-
-Unlike Java, there is no a straightforward way to support PC collection for
-applications with write buffers. This is because the implementation of write
-buffering is different depending on applications, so additional efforts are
-needed to manually modify code. However, this manual modification is only
-limited to a write buffering module, and application logics themselves don't
-need to be edited or annotated.
-
 
 
 \begin{figure*}[t]
@@ -173,6 +128,82 @@ another field to the PC hash table which keeps a stream ID for each PC
 signature.  When a new write request comes, a designated SSD stream ID can be
 obtained by referring to the PC hash table using request's PC value as an
 index.  }
+
+\begin{figure}[t]
+\centering
+\begin{pgfpicture}
+\pgftext{\pgfimage[width=5cm,height=4cm]{scratch.png}}
+\end{pgfpicture}
+\caption{\textcolor{red}{(TODO: Java에 대한 설명이 필요)}}
+\label{fig:java}
+\end{figure}
+
+\subsection{Consistency and uniqueness of PCs}
+The PC is determined by the sum of the return address, i.e., the path to reach the write system call. 
+In general, different I/O activities can not have the same return address because they are
+implemented in different functions. 
+Since the probability that the sum of the different return addresses becomes the same is very low, 
+the PC of an I/O activity in the same program is unique. 
+For multiple programs, however, since each program uses a virtual address, 
+several identical return addresses can occur. 
+However, the probability that two independent programs will have the same
+function call path over four or five is also very low, 
+so we can usually say that a PC is unique.
+
+Moreover, since the virtual address of the code is not changed after the compilation, 
+the PC value will be the same when the program execution is terminated and restarted.
+PCs of restarted program will be the same as the one of previous execution, 
+and the life characteristics of the PC are also the same. 
+Because PCs are unique, if PC lifetime information is maintained, appropriate stream can be allocated 
+even to the first request of a restarting program.
+
+
+\begin{comment}
+Maintaining lifetime information of all the PCs including one-time write PC
+is unnecessary and inefficient because our goal is to identify the dominant PCs.
+In order to filter PCs with small impact, 
+every PCs have training 
+manage PCs with larger number 
+of writes than threshold value set nubmer of writes
+to be managed, for example, 100 times.
+\end{comment}
+
+
+\subsection{PC extraction for indirect writes}
+One limitation of using PCs to extract I/O characteristics is that it only
+works with C/C++ programs that \textit{directly} call write-related system
+calls.  Many programs, however, often invoke write system calls
+\textit{indirectly} through intermediate layers, which makes it difficult to
+track program contexts.
+
+The most representative example may be Java programs, such as Cassandra and
+Hadoop, that run inside a Java Virtual Machine (JVM). Java programs invoke
+write system calls via a native library written in C, so the PC extractor fails
+to capture I/O activities of application logics because it is unable to see the
+stack of Java programs.  Another example is C/C++ programs that use a write
+buffer dedicated to dealing with writes from application logics. For example,
+in MySQL~\cite{MySQL} and PostgreSQL~\cite{PostgreSQL}, all the writes are first
+destined for a write buffer, and then flush threads materialize buffered data
+to persistent storage later.  In that case, the PC extractor only captures PCs
+of flush threads since application logics run in other threads with different
+stacks.
+
+The problem of indirect writes can be addressed by collecting PC signatures at
+the front-end interface of an intermediate layer that accepts write requests
+from application logics. In case of Java programs, a native library can be
+modified to capture write requests and computes PC signatures. Once a native
+library is modified, it automatically gathers PC signatures without modifying
+application code. Fig.~\ref{fig:java} illustrates how \textsf{PCStream}
+collects signatures from Java programs.  \textcolor{red}{(TODO: Java 경우에
+대한 그림과 설명이 추가되면 좋을 듯)}
+
+Unlike Java, there is no a straightforward way to support PC collection for
+applications with write buffers. This is because the implementation of write
+buffering is different depending on applications, so additional efforts are
+needed to manually modify code. However, this manual modification is only
+limited to a write buffering module, and application logics themselves don't
+need to be edited or annotated.
+
 
 
 \subsection{\textcolor{red}{TODO: Internal stream management ???}}

@@ -26,9 +26,9 @@ types of workloads.
 In RocksDB, for example, dominant I/O activities include logging, flushing and
 compaction.  Since they are invoked through different function-call paths, we
 can easily identify dominant I/O activities of RocksDB using PCs.  For example,
-Fig.~\ref{fig:getpc}(a) shows an execution path for flushing in RocksDB.  The
-sum of program counter values of \texttt{Run()}, \texttt{WriteLevel0Table()},
-and \texttt{BuildTable()} is used to represent the PC for the flushing
+Fig.~\ref{fig:getpc}(a) shows an execution path for logging in RocksDB.  The
+sum of program counter values of \texttt{WriteImpl()}, \texttt{WriteToWAL()},
+and \texttt{AddRecord()} is used to represent the PC for the flushing
 activity. Note that using the program context to distinguish data lifetimes is
 not new. For example, Ha {\it et al.} proposed a data separation technique
 based on the program context~\cite{PCHa}.  However, their work was neither
@@ -70,23 +70,36 @@ those from the logging-activity PC.
 
 Furthermore, PCs are also effective for non-append-only workloads
 in distinguishing I/O activities. 
-In order to show the effect of PCperformed experiments ...
-{\color{red} TODO: 추가 그림에 대한 설명 \\ \\ \\ \\ \\ \\ \\}
+In order to show the effectiveness of PC for updating workload,
+we conducted the same experiments for SQLite~\cite{SQLite} and gcc~\cite{GCC}.
+Fig.~\ref{fig:updating_PCs} show the distinct lifetime distribution of an I/O activity 
+of each application.
+As shown in Fig.~\ref{fig:updating_PCs}(a) and ~\ref{fig:updating_PCs}(b),
+the logging activity of SQLite is identified by both methods and 
+their lifetimes are very short.
+There were intensive updates within small address
+space since SQLite can overwrite data.
+Similarly, data lifetime distribution of temp files during compile is shown in
+Fig.~\ref{fig:updating_PCs}(c) and (d).
+Their lifetimes are also relatively short so we can effectively separate
+short lifetime data based on PC.
+
+
 \begin{figure}[t]
 \centering
 \hfill
 %\vspace{-10pt}
-	\subfloat[sqlite (PC)]{\includegraphics[width=0.2\textwidth]{figure/sqlite_short_LBA}} % data from py-tpcc/4/09151534
+	\subfloat[SQLite: log (PC)]{\includegraphics[width=0.2\textwidth]{figure/sqlite_short_LBA}} % data from py-tpcc/4/09151534
 	\hspace{2pt}
-	\subfloat[sqlite (manual)]{\includegraphics[width=0.2\textwidth]{figure/sqlite_short_LBA_manual}}
+	\subfloat[SQLite: log (manual)]{\includegraphics[width=0.2\textwidth]{figure/sqlite_short_LBA_manual}}
 \hfill
 \vspace{7pt}
-	\subfloat[gcc (PC)] {\includegraphics[width=0.2\textwidth]{figure/compile_short_PC}} % data from 08231319
+	\subfloat[gcc: temp files (PC)] {\includegraphics[width=0.2\textwidth]{figure/compile_short_PC}} % data from 08231319
 	\hspace{2pt}
-	\subfloat[gcc (manual)]{\includegraphics[width=0.2\textwidth]{figure/compile_short_manual}}
+	\subfloat[gcc: temp files (manual)]{\includegraphics[width=0.2\textwidth]{figure/compile_short_manual}}
 %\vspace{-7pt}
 \caption{Data lifetime distributions of different PCs for updating workloads.} 
-\label{fig:types_and_PCs}
+\label{fig:updating_PCs}
 %\vspace{-20pt}
 \end{figure}
 
@@ -102,11 +115,14 @@ next instruction of a caller as a return address to the stack, followed by
 pushing a frame pointer value.  In general, by referring to frame pointer
 values, we are able to back-track stack frames of a process and selectively get
 return addresses for generating a PC signature.  For example,
-Fig.~\ref{fig:getpc}(a) shows an abstracted execution path of flushing data in
-RocksDB, and Fig.~\ref{fig:getpc}(b) illustrates how a PC signature is obtained
-by back-tracking the stack.  The return addresses are pushed before calling the
-\textsf{\small  write()}, \textsf{\small  BuildTable()} and \textsf{\small
-WriteLevel0Table()} functions.  Since frame pointer values in the stack hold
+Fig.~\ref{fig:getpc}(a) shows abstracted execution paths of log data and 
+compaction data in RocksDB.
+The return addresses are pushed before calling the
+\textsf{\small  write()}, \textsf{\small AddRecord()} and \textsf{\small
+WriteToWAL()} functions. 
+Fig.~\ref{fig:getpc}(b) illustrates how a 
+PC signature is obtained
+by back-tracking the stack.  Since frame pointer values in the stack hold
 the addresses of previous frame pointers, we can easily obtain return addresses
 and accumulate them to compute a PC signature.  
 
@@ -121,7 +137,7 @@ to back-track return addresses along the call chains.
 %	\vspace{-10pt}
 	\centering
 	%\vspace{-8pt}
-	\subfloat[An abstracted execution path for flushing data.]{\includegraphics[width=0.4\textwidth]{figure/getpc_1}}  
+	\subfloat[Abstracted execution paths of two I/O activities of RocksDB.]{\includegraphics[width=0.3\textwidth]{figure/writepath}}  
 	%\vspace{-14pt}
 	\hfill
 	\subfloat[with the frame pointer.]{\includegraphics[width=0.22\textwidth]{figure/getpc_2}}
@@ -147,14 +163,6 @@ different PCs follow exactly the same execution path to the \textsf{\small
 write()} system call.  In our evaluation with a 3.4 GHz CPU machine, the
 overhead of the restricted scan was almost negligible, taking only 300-400
 $n$sec per \textsf{\small write()} system call.
-
-
-
-
-
-\subsection{Consistency of PCs across the execution}
-Based on the fact that PCs are computed using the return addresses, 
-
 
 
 

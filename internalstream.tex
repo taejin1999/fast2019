@@ -46,7 +46,7 @@ Unfortunately, in the current RocksDB implementation, the compaction step is sup
 by the same execution path (i.e., the same PC) regardless of the level.
 Therefore, the PC for the compaction activity cannot effectively separate data with 
 short lifetimes from one with long lifetimes.
-Fig.~\ref{fig:compaction}(a) shows 
+Fig.~\ref{fig:largevariance}(a) shows 
 the lifetime distribution collected from the compaction-activity PC.  
 {\color{red}TODO: 추가 그림에 대한설명 \\ \\ \\ \\ }
 \begin{comment}
@@ -75,7 +75,7 @@ long-lived data as shown in Fig. 5(d).
 %\vspace{-10pt}
 %\caption{The lifetime distribution of the compaction activity.} 
 \caption{Large lifetime variance I/O activities for various workloads.} %shane part
-\label{fig:compaction}
+\label{fig:largevariance}
 %\vspace{-20pt}
 \end{figure}
 
