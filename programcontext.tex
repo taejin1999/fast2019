@@ -28,7 +28,7 @@ compaction.  Since they are invoked through different function-call paths, we
 can easily identify dominant I/O activities of RocksDB using PCs.  For example,
 Fig.~\ref{fig:getpc}(a) shows an execution path for logging in RocksDB.  The
 sum of program counter values of \texttt{WriteImpl()}, \texttt{WriteToWAL()},
-and \texttt{AddRecord()} is used to represent the PC for the flushing
+and \texttt{AddRecord()} is used to represent the PC for the logging
 activity. Note that using the program context to distinguish data lifetimes is
 not new. For example, Ha {\it et al.} proposed a data separation technique
 based on the program context~\cite{PCHa}.  However, their work was neither
@@ -163,7 +163,4 @@ different PCs follow exactly the same execution path to the \textsf{\small
 write()} system call.  In our evaluation with a 3.4 GHz CPU machine, the
 overhead of the restricted scan was almost negligible, taking only 300-400
 $n$sec per \textsf{\small write()} system call.
-
-
-
 
