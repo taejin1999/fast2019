@@ -22,7 +22,7 @@ management technique, \textsf{\small PCStream}.
 Fig.~\ref{fig:architecture} shows an overall organization of \textsf{\small
 PCStream}. The \textit{PC extractor module} implemented as part of a system
 call handler in the Linux kernel is responsible for computing \textit{a PC
-signature}, which is used as a unique ID of each program context.  A PC
+signature},  A PC
 signature is obtained by summing program counter values~\cite{PC} along the
 execution path to write-related system calls (e.g., {\tt write()}).  With a PC
 signature, data written through specific call paths of applications can be
