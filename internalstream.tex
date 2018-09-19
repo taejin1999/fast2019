@@ -123,10 +123,6 @@ from the sudden power-off conditions because the original valid pages are always
 Therefore, even if the
 number of internal streams increases, unlike normal streams, there is no requirement 
 for a higher-capacity backup capacitor for managing buffered data for internal streams. 
-In Section 2.2, we describe various resource overheads that limit the number of external streams.
-In the case of an internal stream used for internal data migration of SSD, 
-it has a relatively small resource overhead due to its distinguishing characteristics from the external stream
-and it can be used to manage the lifetime variance within streams.
 
 The fast memory requirement is also not directly increased as the number 
 of internal streams increases.   
@@ -138,7 +134,6 @@ Furthermore, for a read request, there is no need to check if a read request
 can be served by buffered data as in normal streams because the source block always 
 has the most up-to-date data.  
 This, in turn, allows data structures for internal streams to be located in slow memory.
-
 Once an SSD reaches the fully saturated condition where host writes and GC 
 are concurrently performed, the performance of GC may suffer some performance degradation 
 from the slow DRAM used for internal streams.   
