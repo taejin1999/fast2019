@@ -30,7 +30,7 @@ monitored at the program context level.  A PC signature is then delivered to
 the \textit{PC-lifetime manager}, which caches collected PC signatures in the
 memory and estimates expected lifetimes of data belonging to given PCs.  Since
 product SSDs only expose a limited number of streams outside, the
-\textit{PC-stream cluster} groups PCs with similar lifetimes using a mapping
+\textit{PC-stream cluster} groups PCs with similar lifetimes using a clustering 
 policy. Data belonging to a same group have a same stream ID.
 
 %the lifetime of data written by write-related system calls can be
@@ -48,26 +48,15 @@ policy. Data belonging to a same group have a same stream ID.
 %stream ID.  This mapping is required because the number of streams in an SSD
 %is generally less than the number of PCs in host applications.
 
-
-\begin{figure*}[t]
-\centering
-\begin{pgfpicture}
-\pgftext{\pgfimage[width=15cm,height=4cm]{scratch.png}}
-\end{pgfpicture}
-\caption{\textcolor{red}{(TODO: Lifetime Estimation 에서부터 SSD Stream Allocation 까지 전체 과정을 
-보여주는 그림이 추가되면 좋을 것 같음. 두 컬럼으로 길게 그려도 나쁘지 않을 듯...)}}
-\label{fig:process}
-\end{figure*}
-
 \subsection{PC lifetime management}
 The responsibility of the PC-lifetime manager is for estimating the lifetime of
 data associated with PC signatures. As mentioned in Section
-\textcolor{red}{XX}, data belonging to an identical PC signature could have
+3, data belonging to an identical PC signature could have
 slightly different lifetimes, but their lifetime trends are almost the same.
 This means that PC signatures is useful to roughly estimate the lifetime of
 given data, but more accurate data separation is required for data belonging to
-the same PC.  This issue will be discussed in Section \textcolor{red}{5.5} in
-detail.
+the same PC.  
+%This issue will be discussed in Section \textcolor{red}{5.5} in detail.
 
 \textbf{Lifetime estimation:}
 In \textsf{PCStream}, the lifetime of data is defined to be an elapsed time
@@ -75,8 +64,8 @@ from when data are written until the data are invalided by TRIM commands or
 overwrites. Whenever a new write request comes, the PC-lifetime manager gets 1)
 a written time and 2) a PC signature, along with 3) a list of LBAs, and put
 them into a candidate table. Upon receiving TRIM commands or overwrite
-requests, \textcolor{blue}{the lifetime estimator} looks for overlapped LBAs in
-the table and if a matched LBA(s) is found, it computes an expected lifetime
+requests, the lifetime manager looks for overlapped LBAs in
+the table and if a matched LBA(s) is found, it computes the lifetime
 for a corresponding PC signature. The PC signature and the expected lifetime
 are then put into a PC hash table.
 
@@ -98,47 +87,11 @@ The size of the hash table is thus quite small, such that it can be entirely
 loaded in DRAM. Our observations say that the hash table only consumes several
 tens or hundreds of KB of DRAM.
 
-\textcolor{red}{
 The important thing to note here is that the PC hash table is able to capture a
 long-term history of programs' I/O behaviors in a system-wide scope.  Even for
 short-lived processes that are launched and terminated frequently, their I/O
-behaviors are collected and applied to the PC hash table.  This is because PC signatures are
-obtained by summing next instruction addresses in the code segment of process's
-virtual memory space. Thus, unless a program itself is updated, PC signatures do not change
-and are maintained identically.
-}
-
-\subsection{Mapping PCs to SSD streams}
-
-After estimating expected lifetimes of PC signatures, the \textsf{PC-stream
-cluster} attempts to group PCs with similar lifetimes into an SSD stream.  This
-grouping process is necessary because product SSDs only support a limited
-number of stream IDs. For example, SSDs used in \textsf{\small
-FStream}~\cite{FStream} and \textsf{\small AutoStream}~\cite{AutoStream}
-support only 9 and 16 streams, respectively; on the other hand, the number of
-unique PCs created is about \textcolor{red}{XXX}.  For grouping, the PC-stream
-cluster module uses a k-means algorithm which is lightweight and is widely used
-in many applications. For adapting to changing workloads, re-clustering
-operations should be performed regularly. \textcolor{red}{To avoid significant
-overhead, re-clustering is triggered when 10\% of the total PCs in the hash
-table have changed}.
-
-\textcolor{red}{To quickly assign incoming data to a proper stream ID, we add
-another field to the PC hash table which keeps a stream ID for each PC
-signature.  When a new write request comes, a designated SSD stream ID can be
-obtained by referring to the PC hash table using request's PC value as an
-index.  }
-
-\begin{figure}[t]
-\centering
-\begin{pgfpicture}
-\pgftext{\pgfimage[width=5cm,height=4cm]{scratch.png}}
-\end{pgfpicture}
-\caption{\textcolor{red}{(TODO: Java에 대한 설명이 필요)}}
-\label{fig:java}
-\end{figure}
-
-\subsection{Consistency and uniqueness of PCs}
+behaviors are collected and applied to the PC hash table.  This is because PCs
+are unique and consistent across the execution.
 The PC is determined by the sum of the return address, i.e., the path to reach the write system call. 
 In general, different I/O activities can not have the same return address because they are
 implemented in different functions. 
@@ -149,24 +102,53 @@ several identical return addresses can occur.
 However, the probability that two independent programs will have the same
 function call path over four or five is also very low, 
 so we can usually say that a PC is unique.
-
 Moreover, since the virtual address of the code is not changed after the compilation, 
 the PC value will be the same when the program execution is terminated and restarted.
 PCs of restarted program will be the same as the one of previous execution, 
 and the life characteristics of the PC are also the same. 
-Because PCs are unique, if PC lifetime information is maintained, appropriate stream can be allocated 
+Because PCs are unique, if PC lifetime information is maintained, 
+appropriate stream can be allocated 
 even to the first request of a restarting program.
 
+\subsection{Mapping PCs to SSD streams}
 
-\begin{comment}
-Maintaining lifetime information of all the PCs including one-time write PC
-is unnecessary and inefficient because our goal is to identify the dominant PCs.
-In order to filter PCs with small impact, 
-every PCs have training 
-manage PCs with larger number 
-of writes than threshold value set nubmer of writes
-to be managed, for example, 100 times.
-\end{comment}
+After estimating expected lifetimes of PC signatures, the \textsf{PC-stream
+cluster} attempts to group PCs with similar lifetimes into an SSD stream.  This
+grouping process is necessary because product SSDs only support a limited
+number of stream IDs. For example, SSDs used in \textsf{\small
+FStream}~\cite{FStream} and \textsf{\small AutoStream}~\cite{AutoStream}
+support only 9 and 16 streams, respectively; on the other hand, the number of
+unique PCs created is about from 4 to 20.  For grouping, the PC-stream
+cluster module uses a k-means algorithm which is lightweight and is widely used
+in many applications. For adapting to changing workloads, re-clustering
+operations should be performed regularly. \textcolor{blue}{To avoid significant
+overhead, re-clustering is triggered when 10\% of the total PCs in the hash
+table have changed}.
+\textcolor{blue}{To quickly assign incoming data to a proper stream ID, we add
+another field to the PC hash table which keeps a stream ID for each PC
+signature.  
+}
+\textcolor{blue}{
+When a new write request comes, a designated SSD stream ID can be
+obtained by referring to the PC hash table using request's PC value as an
+index.
+If there is no such a PC in the table, or the PC does not have designated stream,
+the request gets legacy stream ID, which is 0.
+The PC-lifetime manager updates the average lifetime of PC whenever it computes
+data lifetime.
+The collected PC-lifetime information is applied to the PC hash table
+by occasionally updating the designated stream ID of PCs.
+If a PC continuously writes data, it will get appropriate stream ID soon.
+}
+
+
+
+\begin{figure}[t]
+\centering
+	\includegraphics[width=0.6\linewidth]{figure/jvmpc}
+\caption{Extracting PCs for JVM}
+\label{fig:java}
+\end{figure}
 
 
 \subsection{PC extraction for indirect writes}
@@ -194,8 +176,12 @@ from application logics. In case of Java programs, a native library can be
 modified to capture write requests and computes PC signatures. Once a native
 library is modified, it automatically gathers PC signatures without modifying
 application code. Fig.~\ref{fig:java} illustrates how \textsf{PCStream}
-collects signatures from Java programs.  \textcolor{red}{(TODO: Java 경우에
-대한 그림과 설명이 추가되면 좋을 듯)}
+collects signatures from Java programs.  
+We modified the jvm using OpenJDK~\cite{OpenJDK} to extract PC signatures for 
+most of write methods in write related classes including \texttt{OutputStream}.
+The stack area in \texttt{Runtime Data Areas} of JVM used to calculate PC signatures.
+The calculated PC is, then, passed to the write system call of the kernel via
+the modified native I/O libraries.
 
 Unlike Java, there is no a straightforward way to support PC collection for
 applications with write buffers. This is because the implementation of write
