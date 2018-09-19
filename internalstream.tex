@@ -1,10 +1,19 @@
 \section{Support for Large Number of Streams Using Internal Streams}
+{\color{blue}
+As explained in Section 2.2, the number of streams is restricted to a small number 
+because of the practical limits on the backup power capacity and the size of fast memory.  
+However, if additional operating conditions are guaranteed, special streams may be 
+supported more easily over normal streams.  
+In this Section, we focus on such  a special stream type, called {\it internal} streams, which
+are used only for copying data internally during garbage collection.  
+Internal streams are efficiently implemented while they significantly 
+improve the efficiency of PC-based stream allocation.
+}
 
-
-\subsection{I/O activity with large lifetime variance}
+\subsection{Program contexts with large lifetime variances}
 For most PCs, their lifetime distributions tend to have small variances.  
 However, we observed that a few outlier PCs which have large lifetime variations. 
-For example, when multiple I/O contexts are covered by the same write system function, 
+For example, when multiple I/O contexts are covered by the same execution path, 
 the corresponding PC may represent several I/O contexts whose data lifetimes are quite different.   
 Such a case occurs, for example, 
 in the compaction module of RocksDB.
@@ -17,9 +26,6 @@ LSM tree~\cite{LSM}, a higher level is smaller than a lower level
 (i.e., the size of (L2) $<$ the size of (L3)). 
 Thus, data stored in a higher level is invalidated more frequently than those kept
 in lower levels, thereby having shorter lifetimes.
-
-In order to mitigate the side effect of a few outlier PCs with large lifetime variances, 
-we use internal streams based on a two-phase stream assignment technique.
 
 %Once the L1 becomes full,
 %\textit{all} the data kept in the L1 are moved to the L2 by the compaction
@@ -49,6 +55,28 @@ short lifetimes from one with long lifetimes.
 Fig.~\ref{fig:largevariance}(a) shows 
 the lifetime distribution collected from the compaction-activity PC.  
 {\color{red}TODO: 추가 그림에 대한설명 \\ \\ \\ \\ }
+
+Since it is difficult to separate data with different lifetimes within the same PC 
+(as in the compaction-activity PC), we devised a two-phase method that decides SSD 
+streams in two levels: the main stream in the host level and 
+its internal stream in the SSD level.
+Conceptually, long-lived data in the main stream are moved to its internal stream to 
+separate from (future) short-lived data of the main stream.
+Although moving data to the internal stream may increase WAF,
+the overhead can be hidden if we restrict data copies to the internal stream during GC only.
+Since long-lived data (i.e., valid pages) in a victim block are moved to a free block during GC, 
+blocks belong to an internal block tend to contain long-lived data.
+For instance, \textsf{\small PCStream} assigns the compaction-activity PC {\it $PC_1$} to a
+main stream {\it $S_1$} in the first phase.
+To separate the long-lived data of {\it $PC_1$} (e.g., L4 data) 
+from future short-lived data of the same {\it $PC_1$} (e.g., L1 data), 
+valid pages of the {\it $S_1$} are assigned to its internal stream for the second phase during GC.
+{\color{blue}
+In order to efficiently support the proposed two-phase method, the total number of streams 
+should be doubled including normal streams and internal streams.
+}
+
+
 \begin{comment}
 Since this distribution includes lifetimes of data written from all the levels, 
 its variance is large.  
@@ -79,13 +107,45 @@ long-lived data as shown in Fig. 5(d).
 %\vspace{-20pt}
 \end{figure}
 
-\subsection{Low resource requirement of internal streams}
+\subsection{Efficient Implementation of Internal Streams}
 
+{\color{blue}
+As described in Section 2.2, it is difficult to increase the number of 
+(normal) streams.  However, since internal streams are limited for 
+data movements during GC only, they can be quite efficiently
+implemented without the constraints on the backup power capacity and fast memory size.  
+The key difference in the implementation overhead between normal streams and 
+internal streams comes from a simple observation that data copied during 
+garbage collection do not need the same reliability and performance support for host writes.  
+Unlike buffered data from host write requests, valid pages in
+the source block during garbage collection have no risk of losing their data 
+from the sudden power-off conditions because the original valid pages are always available.    
+Therefore, even if the
+number of internal streams increases, unlike normal streams, there is no requirement 
+for a higher-capacity backup capacitor for managing buffered data for internal streams. 
 In Section 2.2, we describe various resource overheads that limit the number of external streams.
 In the case of an internal stream used for internal data migration of SSD, 
 it has a relatively small resource overhead due to its distinguishing characteristics from the external stream
 and it can be used to manage the lifetime variance within streams.
 
+The fast memory requirement is also not directly increased as the number 
+of internal streams increases.   
+Since internal streams are used only for GC and most GC can be handled as background tasks,
+internal streams has a less stringent performance requirement.  
+Therefore, data structures for supporting internal streams can be placed 
+on DRAM without much performance issues.  
+Furthermore, for a read request, there is no need to check if a read request 
+can be served by buffered data as in normal streams because the source block always 
+has the most up-to-date data.  
+This, in turn, allows data structures for internal streams to be located in slow memory.
+
+Once an SSD reaches the fully saturated condition where host writes and GC 
+are concurrently performed, the performance of GC may suffer some performance degradation 
+from the slow DRAM used for internal streams.   
+However, in our evaluation, such cases were rarely observed with a reasonable overprovisioning capacity.
+}
+
+\begin{comment}
 {\color{blue}
 With regard to power resources, the buffering mechanism can be used for internal streams to maximize flash parallelism, but there is a big difference that no power resource is required to guarantee data integrity of buffered data.
 Buffered data of host write will be lost if the data is not stored during power off handling.
@@ -104,22 +164,7 @@ So read performance is not affected by usage of slow memeory for internal stream
 Under saturated conditions, which require concurrent processing of GC while processing a host write request, 
 performance degradation may occur if slower memory is used in the internal stream, but performance degradation is small compared to using slow memory for external streams.
 }
-
-\subsection{Internal Streams: Separating long-lived data during GC}
-Since it is difficult to separate data with different lifetimes within the same PC 
-(as in the compaction-activity PC), we devised a two-phase method that decides SSD 
-streams in two levels: the main stream ID in a host level and the internal stream ID in an SSD level.
-Conceptually, long-lived data in the main stream are moved to its internal stream to 
-separate from (future) short-lived data of the main stream.
-Although moving data to the internal stream may increase WAF,
-the overhead can be hidden if we restrict the internal stream move during GC only.
-Since long-lived data (i.e., valid pages) in a victim block are moved to a free block during GC, 
-they can be moved to the internal stream by changing the target block.
-For instance, \textsf{\small PCStream} assigns the compaction-activity PC {\it pID} to a
-main stream {\it sID} for the first phase.
-To separate the long-lived data of {\it pID} (e.g., L4 data) 
-from future short-lived data of {\it pID} (e.g., L1 data), 
-valid pages of the {\it sID} are assigned to its internal stream for the second phase during GC.
+\end{comment}
 
 
 
