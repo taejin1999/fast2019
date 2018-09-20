@@ -52,6 +52,7 @@ by an overwrite or a TRIM command.
 As shown in Fig.~\ref{fig:lba_lifetime}(a), 
 there is no strong correlation between LBAs and lifetimes in RocksDB.  
 This scatter plot is in sharp contrast with one for update workloads 
+(as shown in Fig.~\ref{fig:lba_lifetime}(b))
 where a few distinct LBA regions have short lifetimes while others 
 have very long lifetimes.
 
@@ -62,7 +63,12 @@ have very long lifetimes.
 	%\captionsetup[subfigure]{margin={0cm,1cm}}
 	\subfloat[Lifetime patterns over LBAs]{\includegraphics[width=0.215\textwidth]{figure/lba_lifetime2}}  % data from 0/03031641
 	\hspace{10pt}
-	\subfloat[Lifetime patterns over time]{\includegraphics[width=0.21\textwidth]{figure/lifetime_in_chunk}}
+	\subfloat[Lifetime patterns over LBAs for update workload]{\includegraphics[width=0.215\textwidth]{figure/update_lifetime}}  
+	\hfill
+	\vspace{2pt}
+	\subfloat[Lifetime patterns over time for chunk A]{\includegraphics[width=0.21\textwidth]{figure/lifetime_in_chunk}} % data from 0/03031641
+	\hspace{10pt}
+	\subfloat[Lifetime patterns over time for chunk B]{\includegraphics[width=0.21\textwidth]{figure/lifetime_in_chunk3}}
 	%\includegraphics[width=0.9\linewidth]{figure/lba_lifetime} 
 	%\vspace{-3pt}
 	\caption{Lifetime distributions of append-only workload over addresses and times.} %shane part
@@ -76,7 +82,7 @@ if the lifetimes of LBAs change under some predictable patterns over time
 although the overall lifetime distribution shows large variances.
 Fig.~\ref{fig:lba_lifetime}(c) and ~\ref{fig:lba_lifetime}(d) shows
 scatters plot of data lifetimes over the logical time 
-for specific 1-MB chunks with 256 pages. 
+for two specific 1-MB chunks with 256 pages. 
 As shown in Fig.~\ref{fig:lba_lifetime}(c) and ~\ref{fig:lba_lifetime}(d), 
 for the given chunk, data lifetimes vary in a random fashion
 (although some temporal locality is observed).
@@ -92,15 +98,28 @@ In order to support {\it general} I/O workloads in an automatic fashion, stream
 management decisions should be based on higher-level information
 which do not depend on lower-level details such as write patterns based on LBAs.
 
+\begin{figure}[t]
+	\centering
+	%\vspace{-10pt}
+	%\includegraphics[width=0.6\linewidth]{figure/architecture4}
+	\includegraphics[angle=90, width=0.6\linewidth]{figure/stream_perf}
+	%\vspace{-9pt}
+	\caption{The performance of a multi-streadmed SSD varying number of streams.} 
+	\label{fig:stream_perf}
+	%\vspace{-22pt}
+\end{figure}
+
+
 \subsection{Limited Number of Supported Streams}
 One of the key performance parameters in multi-streamed SSDs is the number of 
 available streams in SSDs.  
 Since the main function of  streams is to separate data with different lifetimes 
 so that they are not mixed in the same block, it is clear that the 
 higher the number of streams, the more efficient the performance of multi-streamed SSDs.
-For example, as shown in Fig. XXX,
+For example, as shown in Fig.~\ref{fig:stream_perf},
 the SSD performance keeps improving as the number of streams increases 
 until data with different lifetimes are allocated to separate streams.   
+In the example, application has 4 distinct lifetime characteristics.
 In order to support a large number of streams, both the SBC-4 and NVMe revision 1.3, which define the 
 multi-stream related specifications, allow up to 65,536 streams~\cite{T10, NVMe}.  
 However, the number of streams supported in
