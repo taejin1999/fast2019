@@ -235,9 +235,12 @@ the same {\it $PC_1$} (e.g., L1 data), valid pages of the {\it $S_1$} are
 assigned to its internal stream for the second phase during GC.
 
 {\color{blue}
-We have implemented the internal stream manager with the two-phase method 
-in Samsung's \textcolor{red}{XXX SSD}. (TODO: 태진. 구현에 대한 좀더 구체적인 내용을 우리말로 적을 것.
-너무 길지 않게...
+We have implemented the internal stream manager with the two-phase method in
+Samsung's \textcolor{red}{XXX SSD}. To make it support the two-phase method, we
+have modified its internal FTL so that it manages internal stream while
+performing GC internally. No additional interfaces are necessary to integrating
+it with the host because providing stream IDs (\textit{sID}) to the SSD (which
+is supported by multi-streamed SSD by default) is sufficient.
 }
 
 %{\color{blue} 추가로, SSD가 지원하는 stream의 개수가 변경되는 상황에서도
