@@ -53,13 +53,13 @@ and maintains internal streams stemmed from \textcolor{red}{XXX (TODO: internal 
 
 \subsection{PC lifetime management}
 The responsibility of the PC-lifetime manager is for estimating the lifetime of
-data associated with PC signatures. As mentioned before, data belonging
-to a same PC signature could have slightly different lifetimes, but their
-lifetime trends are almost identical, which  means that PC signatures is useful
-to roughly estimate the lifetime of given data.
-%, but more accurate data
-%separation is required for data belonging to the same PC.  
-%This issue will be discussed in Section \textcolor{red}{5.5} in detail.
+data associated with PC signatures. As mentioned before, data belonging to a
+same PC signature could have slightly different lifetimes, but their lifetime
+trends are almost identical, which means that PC signatures is useful to
+roughly estimate the lifetime of given data.
+%but more accurate data separation
+%is required for data that belong to the same PC but have different lifetimes.
+%This issue will be discussed in Section 5.5 in detail.
 
 \textbf{Lifetime estimation:}
 In \textsf{PCStream}, the lifetime of data is defined to be an elapsed time
@@ -98,7 +98,7 @@ The important point that should be noted here is that the PC-stream table is
 able to capture a long-term history of \textit{programs}' I/O behaviors,
 regardless of their creation and deletion as the form of \textit{processes} in
 the system. Thus, even for short-lived processes (\textit{e.g.,} \texttt{cpp}
-and \texttt{cc1} for gcc) that are launched and terminated frequently, their
+and \texttt{cc1} for GCC) that are launched and terminated frequently, their
 I/O behaviors are collected and applied to the PC-stream table.  This is
 because PCs are unique and consistent across executions of a program.  Every PC
 signature is determined by the sum of return addresses inside a process's
@@ -208,22 +208,37 @@ only limited to a write buffering code, and application logics themselves don't
 need to be edited or annotated.
 
 \subsection{Internal Stream Management}
+While \textsf{PCStream} generally works well, it has two serious limitations;
+First, through PCs, it is possible to roughly estimate the lifetime of data,
+but in some cases data belonging to the same PC could have diverse lifetime
+distributions.  A representative example is the compaction-activity PC
+explained in Section 4. Second, even if, somehow, data with different lifetimes
+could be separated, those separated streams cannot be delivered to an SSD
+because of limited stream numbers supported by an SSD.
+
+As an alternative method to address both of them, we introduce the concept of
+internal streams in Section 4. To realize this idea in practice, we devise a
+two-phase method that decides SSD streams in two levels: the main stream in the
+host level and its internal stream in the SSD level.  Conceptually, long-lived
+data in the main stream are moved to its internal stream to separate from
+(future) short-lived data of the main stream.  Although moving data to the
+internal stream may increase WAF, the overhead can be hidden if we restrict
+data copies to the internal stream during GC only.  Since long-lived data
+(i.e., valid pages) in a victim block are moved to a free block during GC,
+blocks belong to an internal block tend to contain long-lived data.  For
+instance, \textsf{\small PCStream} assigns the compaction-activity PC {\it
+$PC_1$} to a main stream {\it $S_1$} in the first phase.  To separate the
+long-lived data of {\it $PC_1$} (e.g., L4 data) from future short-lived data of
+the same {\it $PC_1$} (e.g., L1 data), valid pages of the {\it $S_1$} are
+assigned to its internal stream for the second phase during GC.
+
 {\color{blue}
-Since it is difficult to separate data with different lifetimes within the same PC 
-(as in the compaction-activity PC), we devised a two-phase method that decides SSD 
-streams in two levels: the main stream in the host level and 
-its internal stream in the SSD level.
-Conceptually, long-lived data in the main stream are moved to its internal stream to 
-separate from (future) short-lived data of the main stream.
-Although moving data to the internal stream may increase WAF,
-the overhead can be hidden if we restrict data copies to the internal stream during GC only.
-Since long-lived data (i.e., valid pages) in a victim block are moved to a free block during GC, 
-blocks belong to an internal block tend to contain long-lived data.
-For instance, \textsf{\small PCStream} assigns the compaction-activity PC {\it $PC_1$} to a
-main stream {\it $S_1$} in the first phase.
-To separate the long-lived data of {\it $PC_1$} (e.g., L4 data) 
-from future short-lived data of the same {\it $PC_1$} (e.g., L1 data), 
-valid pages of the {\it $S_1$} are assigned to its internal stream for the second phase during GC.
+We have implemented the internal stream manager with the two-phase method in
+Samsung's \textcolor{red}{XXX SSD}. To make it support the two-phase method, we
+have modified its internal FTL so that it manages internal stream while
+performing GC internally. No additional interfaces are necessary to integrating
+it with the host because providing stream IDs (\textit{sID}) to the SSD (which
+is supported by multi-streamed SSD by default) is sufficient.
 }
 
 %{\color{blue} 추가로, SSD가 지원하는 stream의 개수가 변경되는 상황에서도
