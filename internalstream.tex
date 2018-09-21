@@ -1,21 +1,27 @@
 \section{Support for Large Number of Streams Using Internal Streams}
 As explained in Section 2.2, the number of streams is restricted to a small number 
 because of the practical limits on the backup power capacity and the size of fast memory.  
-{\color{blue}
 Since the number of supported streams critically impacts the overall performance 
 of multi-streamed SSDs, in this section, we propose a new type of streams, 
 called {\it internal streams}, which can be
 supported without affecting the capacity of a backup power as well as 
 the size of fast memory in SSDs.   
 Internal streams, which are restricted to be used only for garbage collection, 
-significantly improve the efficiency of PC-based stream allocation.
+significantly improve the efficiency of PC-based stream allocation,
+{\color{blue}
+especially when PCs show large lifetime variances in their data lifetime
+distributions.
 }
-Internal streams are efficiently implemented while they significantly 
-improve the efficiency of PC-based stream allocation.
 
 \subsection{Program contexts with large lifetime variances}
-For most PCs, their lifetime distributions tend to have small variances.  
-However, we observed that a few outlier PCs which have large lifetime variations. 
+For most PCs, their lifetime distributions tend to have small variances
+(e.g., Figs.~\ref{fig:types_and_PCs}(a), Figs.~\ref{fig:types_and_PCs}(e)
+Figs.~\ref{fig:types_and_PCs}(g).)
+However, we observed that 
+{\color{blue}
+it is inevitable to have a few PCs with large lifetime variances 
+because of several practical reasons.
+}
 For example, when multiple I/O contexts are covered by the same execution path, 
 the corresponding PC may represent several I/O contexts whose data lifetimes are quite different.   
 Such a case occurs, for example, 
@@ -51,61 +57,67 @@ in lower levels, thereby having shorter lifetimes.
 %level. Thus, data stored in a higher level is invalidated sooner than data kept
 %in lower levels, thereby having much shorter lifetimes.
 
+\begin{figure}[!t]
+\centering
+\subfloat[RocksDB: L2 Compaction]{\includegraphics[width=0.19\textwidth]{figure/type_4}}  % data from 4/03040047
+	\hspace{10pt}
+\subfloat[RocksDB: L4 Compaction]{\includegraphics[width=0.19\textwidth]{figure/type_6}}
+%\caption{The lifetime distribution of the compaction activity.} 
+\caption{Lifetime distributions of the compaction activity at different levels.} %shane part
+\label{fig:compaction}
+\end{figure}
+
+
+
+
 Unfortunately, in the current RocksDB implementation, the compaction step is supported 
 by the same execution path (i.e., the same PC) regardless of the level.
 Therefore, the PC for the compaction activity cannot effectively separate data with 
 short lifetimes from one with long lifetimes.
-Fig.~\ref{fig:types_and_PCs}(c) and ~\ref{fig:types_and_PCs}(d) show
+Fig.~\ref{fig:compaction}(a) and ~\ref{fig:compaction}(b) show
 the different lifetime distribution according to the level of compaction.
 Data of level 4 shows larger lifetime variance than the one of level 2.
+
+Similarly, in SQLite and GCC, program contexts with large lifetime variations
+are also observed.
 Fig.~\ref{fig:types_and_PCs}(f) shows large lifetime variances of data files in
 SQLite.
-Predicting the data lifetime is difficult because 
-SQLite can update in place, so the lifetime is determined by 
-user access patterns.
+{\color{blue}
+Since client request patterns will decide how SQLite updates its tables, 
+the lifetime of data from the updating activity of SQLite is distributed 
+with a large variance.  Similarly, the lifetime of
+data from the result output activity of GCC can significantly fluctuate 
+as well depending on when the next compile step starts.   
 Fig.~\ref{fig:types_and_PCs}(h) shows long lifetimes of 
+}
 object files/executable files after compiling step is finished.
 However, the lifetime of object files/executable files 
 may become short when we re-start the same 
 compile step right after 
 the previous compile is finished.
 
-Since it is difficult to separate data with different lifetimes within the same PC 
-(as in the compaction-activity PC), we devised a two-phase method that decides SSD 
-streams in two levels: the main stream in the host level and 
-its internal stream in the SSD level.
-Conceptually, long-lived data in the main stream are moved to its internal stream to 
-separate from (future) short-lived data of the main stream.
-Although moving data to the internal stream may increase WAF,
-the overhead can be hidden if we restrict data copies to the internal stream during GC only.
-Since long-lived data (i.e., valid pages) in a victim block are moved to a free block during GC, 
-blocks belong to an internal block tend to contain long-lived data.
-For instance, \textsf{\small PCStream} assigns the compaction-activity PC {\it $PC_1$} to a
-main stream {\it $S_1$} in the first phase.
-To separate the long-lived data of {\it $PC_1$} (e.g., L4 data) 
-from future short-lived data of the same {\it $PC_1$} (e.g., L1 data), 
-valid pages of the {\it $S_1$} are assigned to its internal stream for the second phase during GC.
-In order to efficiently support the proposed two-phase method, the total number of streams 
-should be doubled including normal streams and internal streams.
-
-
-\begin{comment}
-Since this distribution includes lifetimes of data written from all the levels, 
-its variance is large.  
-When we manually separate the single compaction step into several per-level compaction steps, 
-as shown in Figs. 5(b) and 5(c), the lifetime distributions of per-level compaction steps 
-show smaller variances.   
-In particular, L2 and L3 show distinct lifetime distributions from that of L4.
-Data from L2 and L3 are likely to have shorter lifetimes, while L4 has generally
-long-lived data as shown in Fig. 5(d).
-\end{comment}
+{\color{blue}
+For these {\it outlier} PCs with large lifetime variations, 
+it is a challenge to allocate streams in an efficient fashion unless 
+there are more application-specific hints (e.g., the compaction level in
+RocksDB) are available.  
+As an ad-hoc (but effective) solution, when a PC shows a large variance 
+in its data lifetime, we allocate an additional stream, called an internal stream, 
+to the PC so that
+the data written from the PC can be better separated between the original 
+stream and its internal stream.  
+In order to support internal streams, the total number of streams may 
+need to be doubled so
+that each stream can be associated with its internal stream.
+}
 
 
 \subsection{Efficient Implementation of Internal Streams}
-
 As described in Section 2.2, it is difficult to increase the number of 
-(normal) streams.  However, since internal streams are limited for 
-data movements during GC only, they can be quite efficiently
+(normal) streams.  However, 
+if we restrict that internal streams are used only for data movements
+during GC,
+they can be quite efficiently
 implemented without the constraints on the backup power capacity and fast memory size.  
 The key difference in the implementation overhead between normal streams and 
 internal streams comes from a simple observation that data copied during 
