@@ -142,6 +142,7 @@ the flushed data by the flushing activity have little bit longer lifetimes.
 Similarly, for SQLite and GCC, dominant I/O
 activities show quite distinct data lifetime characteristics as shown in 
 Figs.~\ref{fig:types_and_PCs}(e) $\sim$ ~\ref{fig:types_and_PCs}(h).
+{\color{blue}
 As shown in Figs.~\ref{fig:types_and_PCs}(e), the logging activity of
 SQLite generates short-lived data.  This is because SQLite overwrites logging
 data in a small and fixed storage space and then removes them soon. 
@@ -155,6 +156,7 @@ However, there are several activities that shows large lifetime variances
 such as compaction activity of RocksDB shown in Fig.~\ref{fig:types_and_PCs}(c) 
 and data files of SQLite in Fig.~\ref{fig:types_and_PCs}(f).
 These activities will be covered in Secion 4.
+}
 
 Note that if we used an LBA-based data separator instead of the proposed PC-based scheme, 
 most of data lifetime characteristics shown in Fig.~\ref{fig:types_and_PCs} could 
@@ -166,19 +168,6 @@ decide that the data lifetime of data produced from the temp output activity of 
 is short because temporary files are not written at the same logical block addresses 
 each time they are generated during
 the compiling step. 
-
-\begin{comment}
-We have conducted additional experiments with SQLite and GCC which have
-different I/O characteristics from RocksDB. In contrast to RocksDB that writes
-almost all of the data in an append-only manner, SQLite 
-writes most data in place while GCC write large data in an write-once mode.
-Fig.~\ref{fig:updating_PCs} 
-shows our experimental results for data lifetime distributions of the I/O
-activities of SQLite and GCC.
- We also
-see that the logging activity is successfully identified by PCs. 
-\end{comment}
-
 
 
 \subsection{Extracting PCs}

@@ -37,9 +37,7 @@ any program changes for stream management over general I/O workloads.
 For example, if an
 application developer should manage stream allocations {\it manually} for 
 a given SSD, multi-streamed SSDs are difficult to be 
-widely employed in practice.   If the application
-developer has no expertise on the application's I/O characteristics or 
-the underlying file system, it will be quite challenge to allocate streams efficiently.   
+widely employed in practice.   
 Second, stream management techniques should have no dependency on 
 the number of available streams.  
 If stream allocation decisions have some dependence on
@@ -51,15 +49,10 @@ to work well with multiple concurrent I/O workloads.
 For example, with 4 streams, it would be difficult to support a large
 number of I/O-intensive concurrent tasks.  
 
-To the best of our knowledge, however, no existing techniques meet all these requirements.  
+Unfortunately, to the best of our knowledge, no existing solutions  for
+multi-streamed SSDs meet all these requirements.  
 Most existing techniques~\cite{MultiStream, Level, FStream, vStream} require 
 programmers to assign streams at the application level with manual code modifications.
-For example,  
-in both \textsf{\small vStream}~\cite{vStream} and
-\textsf{\small ManualStream}\footnote{For brevity, we denote the 
-manual allocation method used in~\cite{MultiStream} by \textsf{\scriptsize ManualStream}.}~\cite{MultiStream}, 
-it is an application developer's 
-responsibility to assign a given write request to a specific stream.
 \textsf{\small AutoStream}~\cite{AutoStream} is the only known automatic technique 
 that supports stream management in the kernel level without manual stream allocation.
 However, since \textsf{\small AutoStream} predicts data lifetimes using the update frequency 
@@ -68,79 +61,71 @@ such as RocksDB~\cite{RocksDB} or Cassandra~\cite{Cassandra}.
 Unlike conventional update workloads where data written to the same LBAs 
 often show strong update locality, 
 append-only workloads make it impossible to predict data lifetimes 
-from LBA characteristics (such as access frequencies or access patterns).  
+from LBA characteristics such as the access frequency.
 
 In this paper, we propose a {\it fully-automatic} stream management technique, 
-called \textsf{\small PCStream}, which works efficiently over all the I/O workloads including modern 
+called \textsf{\small PCStream}, which works efficiently over general I/O workloads including 
 append-only workloads.   
 The key insight behind \textsf{\small PCStream} is that stream allocation decisions should be made 
-at a higher abstraction level than the LBA level where I/O 
-activities can be distinguished.
+at a higher abstraction level where {\it I/O activities}, not LBAs, can be meaningfully distinguished.
 For example, in RocksDB, if we can tell whether the current I/O is a part of 
 a logging activity or a flushing activity, stream allocation decisions can be made 
 a lot more efficiently over when only LBAs of the current I/O is
 available.   
-Furthermore, 
-our preliminary evaluation results strongly indicate that most 
-dominant I/O activities (such as the logging activity in RocksDB) tend to show distinct
-data lifetime characteristics.
 
 In \textsf{\small PCStream}, we employ a write program context\footnote{In this paper, since we are 
 interested in write-related system calls such as write() in Linux, 
 we use {\it write program contexts} and {\it
 program contexts} interchangeable where no confusion arises.} as such a higher-level 
 classification unit for representing I/O activity regardless of the type of I/O workloads. 
-A program context (PC)~\cite{PC, PC2}, which represents a particular execution path of a program 
-up to write system calls,
-is known to be effective in separating data lifetimes~\cite{PCHa}.  
+A program context (PC)~\cite{PC, PC2}, which represents an execution path of a program 
+up to a write system call,
+is known to be effective in 
+{\color{blue}
+representing dominant I/O activities~\cite{PCHa}.  
+Furthermore, most dominant I/O activities tend to show distinct data lifetime characteristics.
+}
 By identifying dominant I/O activities using program contexts during run time, 
-\textsf{\small PCStream} can fully automate the whole process of stream allocation within the 
+\textsf{\small PCStream} can automate the whole process of stream allocation within the 
 kernel with no manual work.  In order to
 seamlessly support various SSDs with different numbers of streams, \textsf{\small PCStream} first maps 
 each program context to a logical (i.e., virtual) stream with no restriction 
 on the number of logical streams.
 For logical streams allocated, \textsf{\small PCStream} groups ones with similar data lifetimes 
 and assigns them to physical streams using the k-means clustering algorithm~\cite{kmeans}. 
-
-By using program contexts as stream allocation units, \textsf{\small PCStream} easily 
+Since program contexts focus on the semantic aspect of I/O execution as a lifetime
+classifier, not on the low-level details such as LBAs and access patterns, 
+\textsf{\small PCStream} easily 
 supports different I/O workloads regardless of whether it is update-only or append-only.   
-Since program contexts focus on the
-semantic aspect of I/O execution, not on the low-level details such as 
-LBAs and access patterns, \textsf{\small PCStream} does not need to handle different I/O workloads 
-separately.  Furthermore,
-since program contexts can be uniquely identified over (virtually) all the 
-existing applications, \textsf{\small PCStream} can maintain each stream's characteristics 
-with each process, thus enabling quick and
-accurate stream allocation whenever the same application is executed.
 
 Although many program contexts show that their data lifetimes are 
-narrowly distributed, we observed 
-that program contexts alone are not sufficient to perfectly distinguish data lifetimes.  
-For example, when a database app updates its 
-tables under several different execution contexts (i.e., different program contexts),
-although we can identify 
-different program contexts, their data
-lifetime distributions may not be accurately predicted because database 
-updates tend to occur in a random fashion.  
-Data lifetime distributions of such program contexts may have rather large variances.
+narrowly distributed, we observed that 
+{\color{blue}
+this is not necessarily true because of several reasons.  
+For example, when a single program context handles multiple types of data with 
+different lifetimes, data lifetime distributions of such
+program contexts  
+}
+have rather large variances.
 In \textsf{\small PCStream}, 
 when such a program context {\it $PC_j$} is observed 
 (which was mapped to a stream {\it $S_k$}), 
-the long-lived data of {\it $PC_j$} are moved to the substream of {\it $S_k$}
+the long-lived data of {\it $PC_j$} are moved to a different streamof {\it $S_k'$}
 during GC.  
-The substream prevents the long-lived data of the stream {\it $S_k$} 
+The stream {\it $S_k'$} prevents the long-lived data of the stream {\it $S_k$} 
 from being mixed with future short-lived data of the stream {\it $S_k$}.
 
 When several program contexts have a large variance in their data lifetimes, 
 the required number of streams can quickly increase over the number of physical streams.
-In order support substreams effectively, we implement a new stream type, 
-called internal streams, which can be used for substreams only. 
+In order to effectively increase the  number of streams, we propose a new stream type, 
+called an internal stream, which can be used only for garbage collection.
 Unlike physical streams, internal streams can be efficiently
 implemented at low cost without increasing the SSD resource budget.  
 In the current version of \textsf{\small PCStream}, we create the same number of internal streams 
 as the physical streams, effectively doubling the number of available streams. 
-By dedicating internal streams only for substreams, \textsf{\small PCStream} can handle 
-program contexts with large variances without consuming valuable normal
+Using internal streams, \textsf{\small PCStream} can effectively overcome
+the diffcult stream allocation problem with program
+contexts with large variances without consuming valuable normal
 streams.
 
 In order to evaluate the effectiveness of \textsf{\small PCStream}, 
