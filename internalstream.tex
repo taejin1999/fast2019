@@ -1,14 +1,17 @@
 \section{Support for Large Number of Streams Using Internal Streams}
-{\color{blue}
 As explained in Section 2.2, the number of streams is restricted to a small number 
 because of the practical limits on the backup power capacity and the size of fast memory.  
-However, if additional operating conditions are guaranteed, special streams may be 
-supported more easily over normal streams.  
-In this Section, we focus on such  a special stream type, called {\it internal} streams, which
-are used only for copying data internally during garbage collection.  
+{\color{blue}
+Since the number of supported streams critically impacts the overall performance 
+of multi-streamed SSDs, in this section, we propose a new type of streams, 
+called {\it internal streams}, which can be
+supported without affecting the capacity of a backup power as well as 
+the size of fast memory in SSDs.   
+Internal streams, which are restricted to be used only for garbage collection, 
+significantly improve the efficiency of PC-based stream allocation.
+}
 Internal streams are efficiently implemented while they significantly 
 improve the efficiency of PC-based stream allocation.
-}
 
 \subsection{Program contexts with large lifetime variances}
 For most PCs, their lifetime distributions tend to have small variances.  
@@ -52,16 +55,19 @@ Unfortunately, in the current RocksDB implementation, the compaction step is sup
 by the same execution path (i.e., the same PC) regardless of the level.
 Therefore, the PC for the compaction activity cannot effectively separate data with 
 short lifetimes from one with long lifetimes.
-Fig.~\ref{fig:largevariance}(a) and ~\ref{fig:largevariance}(b) show
+Fig.~\ref{fig:types_and_PCs}(c) and ~\ref{fig:types_and_PCs}(d) show
 the different lifetime distribution according to the level of compaction.
 Data of level 4 shows larger lifetime variance than the one of level 2.
-Fig.~\ref{fig:largevariance}(c) shows large lifetime variances of data files in
+Fig.~\ref{fig:types_and_PCs}(f) shows large lifetime variances of data files in
 SQLite.
 Predicting the data lifetime is difficult because 
 SQLite can update in place, so the lifetime is determined by 
 user access patterns.
-Fig.~\ref{fig:largevariance}(d) shows large lifetimes of result files after the compile.
-The lifetime of the result file may become short when we start compile right after 
+Fig.~\ref{fig:types_and_PCs}(h) shows long lifetimes of 
+object files/executable files after compiling step is finished.
+However, the lifetime of object files/executable files 
+may become short when we re-start the same 
+compile step right after 
 the previous compile is finished.
 
 Since it is difficult to separate data with different lifetimes within the same PC 
@@ -79,10 +85,8 @@ main stream {\it $S_1$} in the first phase.
 To separate the long-lived data of {\it $PC_1$} (e.g., L4 data) 
 from future short-lived data of the same {\it $PC_1$} (e.g., L1 data), 
 valid pages of the {\it $S_1$} are assigned to its internal stream for the second phase during GC.
-{\color{blue}
 In order to efficiently support the proposed two-phase method, the total number of streams 
 should be doubled including normal streams and internal streams.
-}
 
 
 \begin{comment}
@@ -96,41 +100,22 @@ Data from L2 and L3 are likely to have shorter lifetimes, while L4 has generally
 long-lived data as shown in Fig. 5(d).
 \end{comment}
 
-\begin{figure}[!t]
-\centering
-%\vspace{-7pt}
-\hfill
-\subfloat[RocksDB: L4]{\includegraphics[width=0.2\textwidth]{figure/type_6}}% data from 4/03040047
-	\hspace{2pt}
-\subfloat[RocksDB: L2]{\includegraphics[width=0.2\textwidth]{figure/type_4}}  
-\hfill
-\vspace{7pt}
-\subfloat[SQLite: data files]{\includegraphics[width=0.2\textwidth]{figure/sqlite_long_LBA}}
-	\hspace{2pt}
-\subfloat[GCC: result files]{\includegraphics[width=0.2\textwidth]{figure/compile_long}}
-%\vspace{-10pt}
-%\caption{The lifetime distribution of the compaction activity.} 
-\caption{Large lifetime variance I/O activities for various workloads.} %shane part
-\label{fig:largevariance}
-%\vspace{-20pt}
-\end{figure}
 
 \subsection{Efficient Implementation of Internal Streams}
 
-{\color{blue}
 As described in Section 2.2, it is difficult to increase the number of 
 (normal) streams.  However, since internal streams are limited for 
 data movements during GC only, they can be quite efficiently
 implemented without the constraints on the backup power capacity and fast memory size.  
 The key difference in the implementation overhead between normal streams and 
 internal streams comes from a simple observation that data copied during 
-garbage collection do not need the same reliability and performance support for host writes.  
+GC do not need the same reliability and performance support as for host writes.  
 Unlike buffered data from host write requests, valid pages in
 the source block during garbage collection have no risk of losing their data 
 from the sudden power-off conditions because the original valid pages are always available.    
 Therefore, even if the
-number of internal streams increases, unlike normal streams, there is no requirement 
-for a higher-capacity backup capacitor for managing buffered data for internal streams. 
+number of internal streams increases, unlike normal streams, 
+no higher-capacity backup capacitor is necessary for managing buffered data for internal streams. 
 
 The fast memory requirement is also not directly increased as the number 
 of internal streams increases.   
@@ -143,10 +128,10 @@ can be served by buffered data as in normal streams because the source block alw
 has the most up-to-date data.  
 This, in turn, allows data structures for internal streams to be located in slow memory.
 Once an SSD reaches the fully saturated condition where host writes and GC 
-are concurrently performed, the performance of GC may suffer some performance degradation 
-from the slow DRAM used for internal streams.   
-However, in our evaluation, such cases were rarely observed with a reasonable overprovisioning capacity.
-}
+are concurrently performed, the performance of GC may degrade a little because of
+the slow DRAM used for internal streams.   
+However, in our evaluation, such cases were rarely observed under a 
+reasonable overprovisioning storage capacity.
 
 \begin{comment}
 {\color{blue}
