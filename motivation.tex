@@ -93,7 +93,8 @@ followed by a rapid drop around the logical time 600.
 Our workload analysis using RocksDB strongly suggests that under append-only workloads, 
 LBAs are not useful in predicting data lifetimes reliably.
 {\color{blue}
-In practice, LBA-based data separations works well only when the LBA access 
+In practice, the applicability of LBA-based data separation techniques is quite 
+limited to a few cases only when the LBA access
 locality is obvious in I/O activities such as metadata file or log file updates.  
 }
 In order to support {\it general} I/O workloads in an automatic fashion, stream 
@@ -104,13 +105,12 @@ which do not depend on lower-level details such as write patterns based on LBAs.
 	\centering
 	%\vspace{-10pt}
 	%\includegraphics[width=0.6\linewidth]{figure/architecture4}
-	\includegraphics[width=0.8\linewidth]{figure/stream_perf}
+	\includegraphics[width=0.7\linewidth]{figure/stream_perf}
 	%\vspace{-9pt}
 	\caption{Changes in IOPS over varying number of streams.} 
 	\label{fig:stream_perf}
 	%\vspace{-22pt}
 \end{figure}
-
 
 \subsection{Limited Number of Supported Streams}
 One of the key performance parameters in multi-streamed SSDs is the number of 
@@ -119,16 +119,13 @@ Since the main function of  streams is to separate data with different lifetimes
 so that they are not mixed in the same block, it is clear that the 
 higher the number of streams, the more efficient the performance of multi-streamed SSDs.
 {\color{blue}
-For example, as shown in Fig.~\ref{fig:stream_perf},
-the SSD performance keeps improving as the number of streams increases 
-until data with different lifetimes are allocated to separate streams.   
-In the example, we ran RocksDB, which has about 4$\sim$5 I/O activities 
-with distinct data lifetime characteristics,
-on the Samsung PM963 multi-streamed SSD that can support up to 8 streams.
-We modified RocksDB implementation to allocate I/O activites to a stream.
-The IOPS was measured by \texttt{db\_bench} benchmark and saturated after 
-RocksDB can utilize enough number streams (more than 4) for
-data from most I/O activities to be allocated to separate streams.
+For example, Fig.~\ref{fig:stream_perf} shows how IOPS values in RocksDB
+change as the number of streams increases on a Samsung PM963 multi-streamed SSD
+with maximum 8 streams.
+The IOPS was measured by the \texttt{db\_bench} benchmark.
+As shown in Fig.~\ref{fig:stream_perf}, the IOPS is continuously improving
+until 6 streams are used when dominant I/O activities with different data lifetimes
+are sufficiently separated.
 }
 In order to support a large number of streams, both the SBC-4 and NVMe revision 1.3, which define the 
 multi-stream related specifications, allow up to 65,536 streams~\cite{T10, NVMe}.  

@@ -57,20 +57,20 @@ leads to a write system call.
 \centering
 %\vspace{-10pt}
 	\subfloat[RocksDB: Logging]{\includegraphics[width=0.22\textwidth]{figure/pcID_2}} % data from 4/03031953 
-	\hspace{2pt}
+	\hspace{4pt}
 	\subfloat[RocksDB: Flushing]{\includegraphics[width=0.22\textwidth]{figure/pcID_3}}
+	\hspace{4pt}
+	\subfloat[RocksDB: Compaction]{\includegraphics[width=0.22\textwidth]{figure/pc_3}}  
 	\hspace{2pt}
-	\subfloat[RocksDB: L2 Compaction]{\includegraphics[width=0.22\textwidth]{figure/type_4}}  
-	\hspace{2pt}
-	\subfloat[RocksDB: L4 Compaction]{\includegraphics[width=0.22\textwidth]{figure/type_6}}% data from 4/03040047
+	\subfloat[TBD]{\includegraphics[width=0.1\textwidth]{figure/type_6}}% data from 4/03040047
 	\hfill
-	\subfloat[SQLite: logging]{\includegraphics[width=0.22\textwidth]{figure/sqlite_short_LBA}}
+	\subfloat[SQLite: Logging]{\includegraphics[width=0.22\textwidth]{figure/sqlite_short_LBA}}
 	\hspace{2pt}
-	\subfloat[SQLite: data files]{\includegraphics[width=0.22\textwidth]{figure/sqlite_long_LBA}}
+	\subfloat[SQLite: Updating]{\includegraphics[width=0.22\textwidth]{figure/sqlite_long_LBA}}
 	\hspace{2pt}
-	\subfloat[GCC: temp files]{\includegraphics[width=0.22\textwidth]{figure/compile_short_PC}}
+	\subfloat[GCC: Temp Output]{\includegraphics[width=0.22\textwidth]{figure/compile_short_PC}}
 	\hspace{2pt}
-	\subfloat[GCC: result files]{\includegraphics[width=0.22\textwidth]{figure/compile_long}}
+	\subfloat[GCC: Result Output]{\includegraphics[width=0.22\textwidth]{figure/compile_long}}
 %\vspace{-7pt}
 \caption{Data lifetime distributions of dominant I/O activities in RocksDB, SQLite and GCC.} 
 \label{fig:types_and_PCs}
@@ -110,8 +110,9 @@ to represent a PC for the logging activity while that of the execution path
 for the compaction activity.
 
 {\color{blue}
-In SQLite, there exist two dominant I/O activities which are logging and tables.
-Similar to the RocksDB, SQLite writes log files and database files in the different
+In SQLite, there exist two dominant I/O activities which are logging and managing 
+database tables.
+Similar to the RocksDB, SQLite writes log files and database files using different
 execution paths.
 In GCC, there exist many dominant I/O activities of creating various types of 
 temporal files and object files.
@@ -127,15 +128,15 @@ temporal files and object files.
 To confirm our hypothesis that data lifetimes can be distinguished by tracking
 dominant I/O activities and a PC is a useful unit of classification for 
 different I/O activities,
-{\color{blue}we have have analyzed how well PCs works for RocksDB, SQLite and GCC.
+{\color{blue}we have analyzed how well PCs work for RocksDB, SQLite and GCC.
 Fig.~\ref{fig:types_and_PCs} shows data lifetime distributions of 
 dominant I/O activities which were distinguished by computed PC values.}
 As expected, Fig.~\ref{fig:types_and_PCs} validates that dominant I/O activities 
 show distinct data lifetime distributions over the logical address space.
 For example, as shown in Figs.~\ref{fig:types_and_PCs}(a) $\sim$ 
-~\ref{fig:types_and_PCs}(d), 
+~\ref{fig:types_and_PCs}(c), 
 the logging activity, the flushing activity and the compaction activity 
-clearly exhibit quite different data lifetime distributions.
+in RocksDB clearly exhibit quite different data lifetime distributions.
 While the logged data written by the logging activity have short lifetimes, 
 the flushed data by the flushing activity have little bit longer lifetimes.  
 Similarly, for SQLite and GCC, dominant I/O
@@ -151,7 +152,7 @@ because of the write-once pattern of temporary files.
 Data from most activities show small variances which are good 
 candidates for allocating separate streams. 
 However, there are several activities that shows large lifetime variances
-such as L4 compaction activity of RocksDB shown in Fig.~\ref{fig:types_and_PCs}(d) 
+such as compaction activity of RocksDB shown in Fig.~\ref{fig:types_and_PCs}(c) 
 and data files of SQLite in Fig.~\ref{fig:types_and_PCs}(f).
 These activities will be covered in Secion 4.
 
@@ -161,7 +162,7 @@ not have been known.  Only the data lifetime
 distribution of the logging activity of SQLite, as shown in Fig.~\ref{fig:types_and_PCs}(e), 
 can be accurately captured by the LBA-based data separator.  
 For example, the LBA-based data separtor cannot 
-decide that the data lifetime of data produced from the temp activity of GCC 
+decide that the data lifetime of data produced from the temp output activity of GCC 
 is short because temporary files are not written at the same logical block addresses 
 each time they are generated during
 the compiling step. 

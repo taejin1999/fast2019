@@ -190,10 +190,24 @@ needed to manually modify code. However, this manual modification is only
 limited to a write buffering module, and application logics themselves don't
 need to be edited or annotated.
 
-
-
-\subsection{\textcolor{red}{TODO: Internal stream management ???}}
-
+\subsection{Internal Stream Management}
+{\color{blue}
+Since it is difficult to separate data with different lifetimes within the same PC 
+(as in the compaction-activity PC), we devised a two-phase method that decides SSD 
+streams in two levels: the main stream in the host level and 
+its internal stream in the SSD level.
+Conceptually, long-lived data in the main stream are moved to its internal stream to 
+separate from (future) short-lived data of the main stream.
+Although moving data to the internal stream may increase WAF,
+the overhead can be hidden if we restrict data copies to the internal stream during GC only.
+Since long-lived data (i.e., valid pages) in a victim block are moved to a free block during GC, 
+blocks belong to an internal block tend to contain long-lived data.
+For instance, \textsf{\small PCStream} assigns the compaction-activity PC {\it $PC_1$} to a
+main stream {\it $S_1$} in the first phase.
+To separate the long-lived data of {\it $PC_1$} (e.g., L4 data) 
+from future short-lived data of the same {\it $PC_1$} (e.g., L1 data), 
+valid pages of the {\it $S_1$} are assigned to its internal stream for the second phase during GC.
+}
 
 %{\color{blue} 추가로, SSD가 지원하는 stream의 개수가 변경되는 상황에서도
 %reclustering을 통해
