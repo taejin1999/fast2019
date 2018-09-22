@@ -4,7 +4,7 @@
 	\centering
 	%\vspace{-10pt}
 	%\includegraphics[width=0.6\linewidth]{figure/architecture4}
-	\includegraphics[width=0.8\linewidth]{figure/overview.png}
+	\includegraphics[width=0.8\linewidth]{figure/overview}
 	%\vspace{-9pt}
 	\caption{
 		An overall architecture of \textsf{\small PCStream}. 
@@ -22,7 +22,7 @@ In this section, we explain the detailed implementation of \textsf{\small
 PCStream}.  Fig.~\ref{fig:architecture} shows an overall architecture of
 \textsf{\small PCStream}. The \textit{PC extractor module} is implemented as
 part of a kernel's system call handler as already described in
-Section~\ref{sec:xx}, and is responsible for computing a PC signature
+Section~\ref{sec:internal }, and is responsible for computing a PC signature
 from applications.  A PC signature is then delivered to the \textit{PC-lifetime
 manager}, which estimates expected lifetimes of data belonging to given PCs.
 Since product SSDs only expose a limited number of streams outside, the
@@ -33,8 +33,7 @@ corresponding stream IDs, are maintained in the \textit{PC-stream table}.  The
 information in the table is kept updated adapting to changing workloads and is
 used for deciding designated stream IDs for incoming data. Finally, the
 \textit{internal stream manager} implemented inside an SSD creates, removes,
-and maintains internal streams stemmed from \textcolor{red}{XXX (TODO: internal stream
-에 대응되는 용어가 필요할듯)}.
+and maintains internal streams stemmed from physical streams.
 
 %the lifetime of data written by write-related system calls can be
 %monitored at the program context level.  
@@ -67,7 +66,7 @@ from when data are written until the data are invalided by TRIM commands or
 overwrites. Whenever a new write request arrives that attempts to write data to
 free LBAs, the PC-lifetime manager gets 1) its written time and 2) a PC
 signature, along with 3) a list of LBAs, and put them into a candidate table.
-Upon receiving TRIM commands or overwrite request that updates previously
+Upon receiving TRIM commands or overwrite requests that update previously
 written LBAs, the lifetime manager looks for a PC signature overlapped with
 requested LBAs in the table and computes the lifetime (\textit{i.e.,} current
 time - written time) of the corresponding PC.  The PC signature and the
@@ -77,14 +76,17 @@ requests.
 
 Maintaining the candidate table in DRAM could be a serious burden owing to its
 huge size. To mitigate this, the lifetime estimator slightly sacrifices
-accuracy by increasing the granularity of LBA to 1~MB, instead of 4 KB.  The
+accuracy by increasing the granularity of LBA to 1 MB, instead of 4 KB.  The
 candidate table is indexed by 1 MB LBA, and each table entry holds PC
-signatures and written times. Because of coarse-grained indexing, each entry
+signatures and written times. Because of the coarse-grained indexing, each entry
 could have multiple signatures and written times, and the same PC could span
 across multiple entries.  If the same PC has different lifetimes, we take the
-average one as PC's lifetime. To limit the table size, if the table reaches a
+average one as PC's lifetime. 
+To limit the table size, if the table reaches a
 threshold size, the least recently referenced one is removed. In the current
-implementation, the threshold is set to \textcolor{red}{XX MB}.
+implementation, the threshold is set to 64 MB.
+%For a 512 GB SSD with 1 MB-sized unit, assuming the table entry size is 48 B, 
+%about 24 MB of host memory is required to hold the candidate table.
 
 \textbf{PC-stream table:}
 The PC-stream table keeps PC signatures and its expected lifetimes. To quickly
@@ -134,8 +136,8 @@ unique behaviors of individual systems and workloads.
 After estimating expected lifetimes of PC signatures, the PC-stream cluster
 attempts to group PCs with similar lifetimes into an SSD stream.  This grouping
 process is necessary because while product SSDs only support a limited number
-of stream IDs, the number of unique PCs created is about \textcolor{red}{from 4
-to 20 (너무작음)}.  For grouping, the PC-stream cluster module uses a k-means
+of stream IDs, the number of unique PCs created is up to more than 20.  
+For grouping, the PC-stream cluster module uses a k-means
 algorithm which is lightweight and is widely used for similar purposes.  To
 quickly assign a proper stream ID to incoming data, we add another field to the
 PC-stream table which keeps a stream ID for each PC signature.  More
@@ -159,10 +161,9 @@ table have been changed.
 
 \begin{figure}[t]
 \centering
-	\includegraphics[width=0.6\linewidth]{figure/jvmpc}
+	\includegraphics[width=0.8\linewidth]{figure/jvmpc}
 	\caption{
-	Extracting PCs for JVM \textcolor{red}{(TODO: 그림 업데이트 필요. 매우 성의
-	없어 보임)} 
+	Extracting PCs for JVM
 	}
 \label{fig:java}
 \end{figure}
@@ -225,7 +226,7 @@ data in the main stream are moved to its internal stream to separate from
 internal stream may increase WAF, the overhead can be hidden if we restrict
 data copies to the internal stream during GC only.  Since long-lived data
 (i.e., valid pages) in a victim block are moved to a free block during GC,
-blocks belong to an internal block tend to contain long-lived data.  For
+blocks belong to an internal stream tend to contain long-lived data.  For
 instance, \textsf{\small PCStream} assigns the compaction-activity PC {\it
 $PC_1$} to a main stream {\it $S_1$} in the first phase.  To separate the
 long-lived data of {\it $PC_1$} (e.g., L4 data) from future short-lived data of
@@ -234,10 +235,10 @@ assigned to its internal stream for the second phase during GC.
 
 {\color{blue}
 We have implemented the internal stream manager with the two-phase method in
-Samsung's \textcolor{red}{XXX SSD}. To make it support the two-phase method, we
+Samsung's PM963 SSD. To make it support the two-phase method, we
 have modified its internal FTL so that it manages internal stream while
 performing GC internally. No additional interfaces are necessary to integrating
-it with the host because providing stream IDs (\textit{sID}) to the SSD (which
+it with the host because providing stream IDs (\textit{$S_i$}) to the SSD (which
 is supported by multi-streamed SSD by default) is sufficient.
 }
 
