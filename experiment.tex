@@ -150,7 +150,7 @@ Since a block with very small number of valid pages will be easily involved to G
 long-lived data in stream 8 is the worst case scenario 
 for preventing valid page copies during GC.
 
-\subsection{Analysis of the Internal Stream Impact}
+\subsection{Impact of the Internal Stream}
 
 In order to understand the impact of the two-phase assignment, we compared each
 technique with and without the internal stream.  The internal stream works
@@ -174,39 +174,46 @@ it performed worse than PCStream.
 \begin{figure}[t]
 	\centering
 	\includegraphics[width=0.9\linewidth]{figure/internal}
-	\caption{An WAF comparison with and without using internal streams.
-		\textcolor{red}{(TODO: How about adding
-		the improvement ratio (\%) instead of showing absolute WAF numbers?)} 
-	}
+	\caption{Comparison of WAF w/ and w/o internal streams.}
 	\label{fig:internal}
 	%\vspace{-36pt}
 \end{figure}
 
 
-\subsection{Analysis of the PC-stream table Impact}
+\subsection{Impact of the PC-stream table}
 
 \begin{figure}[t]
 	\centering
 	\includegraphics[width=0.7\linewidth]{figure/pctable}
 	\caption{Request portion comparison of stream 0 with PC-stream table.
-		\textcolor{red}{(TODO: How about adding the size of PC-stream table? It was mentioned in
-		the text of the paper.)} }
+		\textcolor{red}{
+			(TODO: How about adding the size of PC-stream table? It was mentioned in
+			the text of the paper.)}
+		}
 	\label{fig:pctable}
 	%\vspace{-36pt}
 \end{figure}
 
-As explained in Section 5, PCStream can benefit from the uniqueness of PCs
-by using the PC-stream table.
-PCs of frequently launched and terminated process can be directly allocated without
-waiting for sufficient lifetime values are collected.
-Fig.~\ref{fig:pctable} shows the request portion of stream 0, where 
-awaiting requests are allocated.
-As shown in Fig.~\ref{fig:pctable}, DB applications run 
-continuously so the benefit of using PC-stream table was very small. 
-However, since GCC is executed repeatedly, 6 percent of requests are directly
-allocated to the desinated streams based on the lifetime information from the 
-previous execution. 
-Due to the direct allocation with PC-stream table, PCStream can 
-reduce WAF from 1.96 to 1.54 for GCC workload.
+As explained in Section 5, the PC-stream table provides us with a long-term
+history of applications' I/O behaviors, and it even works for short-lived
+applications that are frequently launched and terminated. To confirm its
+benefits, we have modified \textsf{PCStream} so that it throws away the
+contents of the PC-stream table at the end of each benchmark runs. For example,
+in the kernel compilation scenario with GCC, the PC-stream table is
+intentionally set empty after each run finishes, and thus the next run will
+start without any prior knowledge about past PCs.
 
+Fig.~\ref{fig:pctable} illustrates our experimental results, which shows how
+many requests are sent to the stream 0. In \textsf{PCStream}, the stream 0 is
+assigned to write requests whose lifetime behaviors are not estimated yet.
+Therefore, the more write requests are assigned to the stream 0, the less the
+history \textsf{PCStream} maintains. As shown in Fig.~\ref{fig:pctable}, in
+RocksDB, Cassandra, and SQLite, the absence of the PC-stream table did not
+affect the number of requests send to the stream 0. This is because those
+programs ran continuously for a long time. Unlike them, GCC involves frequent
+creations and termination of processes (\textit{e.g.}, \textcolor{red}{XXX}).
+Hence, without the PC-stream table, about 16\% of requests were sent to the
+stream 0. With the PC-stream table, it was reduced to less 10\%. We also
+observed that with, the PC-stream table, the WAF value was reduced from 1.96 to
+1.54 for GCC.
 
