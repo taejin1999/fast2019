@@ -1,5 +1,9 @@
 \section{Experimental Results}
 
+\textcolor{red}{(TODO: performance results are not included in section 6. we
+should add some numbers such as runtime, throughput, cdf of latency, and SW
+overhead)}
+
 We have implemented \textsf{PCStream} on the Linux kernel 4.5 that runs on
 Intel's i7-2600 CPUs with 8 cores and with 16~GB DRAM.  Samsung's PM963 480~GB
 SSD with a multi-stream feature is used.  PM963 supports up to 9 streams; 8
@@ -61,20 +65,18 @@ with user files before benchmarks run.
 	%\vspace{-36pt}
 \end{figure}
 
-
-We compared WAF of the existing techniques with \textsf{\small PCStream} for 
-various workloads and the result is shown in Fig.~\ref{fig:waf}.  
-\textsf{\small PCStream} was quite effective in reducing WAF, 
-thus achieving an equivalent level of the WAF reduction as in \textsf{\small Manual}.  
-For example, \textsf{\small PCStream}  
-reduced WAF by 63\% over \textsf{\small Baseline} on average.
-\textsf{\small PCStream} also outperformed \textsf{\small AutoStream} 
-by reducing WAF by 49\% on average.
-The result shows that separating short-lived data (e.g., log or temp files) 
-from long-lived one (e.g., compaction or result files) 
-using PC was quite effective in reducing WAF.  
-Moreover, \textsf{\small PCStream} even showed similar WAF to \textsf{\small Manual}, 
-reducing it by up to 69\% over \textsf{\small AutoStream} for \texttt{Mixed 1} case.
+We compared WAF of the existing techniques with \textsf{\small PCStream} for
+various workloads and the result is shown in Fig.~\ref{fig:waf}.
+\textsf{\small PCStream} was quite effective in reducing WAF, thus achieving an
+equivalent level of the WAF reduction as in \textsf{\small Manual}.  For
+example, \textsf{\small PCStream}  reduced WAF by 63\% over \textsf{\small
+Baseline} on average.  \textsf{\small PCStream} also outperformed
+\textsf{\small AutoStream} by reducing WAF by 49\% on average.  The result
+shows that separating short-lived data (e.g., log or temp files) from
+long-lived one (e.g., compaction or result files) using PC was quite effective
+in reducing WAF.  Moreover, \textsf{\small PCStream} even showed similar WAF to
+\textsf{\small Manual}, reducing it by up to 69\% over \textsf{\small
+AutoStream} for \texttt{Mixed 1} case.
 
 AutoStream was not able to achieve high WAF reduction because of 
 the lack of relationship between hotness and address in the general I/O workloads.
@@ -150,30 +152,32 @@ for preventing valid page copies during GC.
 
 \subsection{Analysis of the Internal Stream Impact}
 
-To understand the impact of the
-two-phase assignment, in addition, we compared each techniques
-with and without using internal streams.
-Since internal streams are orthogonal to the stream management technique,
-internal streams can be combined with any stream management techniques.
-Fig.~\ref{fig:internal} shows the WAF comparison on the internal stream usage 
-for various workloads.
-Although every technqiue can benefit from using internal streams,
-its effect is limited for cases other than PCStream.
-Since internal streams can not help data copies from the first phase,
-Baseline, where different lifetimes of data 
-are allocated in a random fashion, still showed high WAF even internal streams are used.
-As shown in Fig.~\ref{fig:internal}, the WAF for Baseline with internal streams is still 
-larger than 2 because of the page copies from the first phase.
-Similarly, for AutoStream, the benefit of internal stream was marginal 
-because it can not prevent writing long-lived data to the stream of short-lived data.
-Unlike other techniques, we can achieve lower WAF because PCStream can effectively 
-separate short-lived data from the first phase exploiting the lifetime characteristics of PCs.
-
+In order to understand the impact of the two-phase assignment, we compared each
+technique with and without the internal stream.  The internal stream works
+independently of a stream assignment method running at the host level, so it
+can easily be combined with any host-level techniques.  Fig.~\ref{fig:internal}
+shows a comparison of WAF values of Baseline, AutoStream, and PCStream under
+the five workloads.  At a glance, we notice that all the techniques benefited
+from using the internal stream.  However, its impact was not so high to offset
+WAF costs caused by the improper stream assignment by the first-phase.  For
+example, in Baseline, all the data from the host are first written to the same
+default stream, regardless of their hotness.  Then, during SSD GC, cold data
+that are left valid in the default stream are moved to the internal stream.
+This helps us prevent cold data from being mixed up with future incoming data,
+separating hot and cold data in two different segments. However, since the host
+keeps writing the mixture of hot/cold data to the default stream, it is
+impossible to avoid extra copy costs involved in the default stream.
+AutoStream worked better than Baseline by assigning hot and cold data to
+different streams, but owing to the inaccuracy of LBA-based hot-cold detection,
+it performed worse than PCStream.
 
 \begin{figure}[t]
 	\centering
 	\includegraphics[width=0.9\linewidth]{figure/internal}
-	\caption{An WAF comparison with and without using internal streams.}
+	\caption{An WAF comparison with and without using internal streams.
+		\textcolor{red}{(TODO: How about adding
+		the improvement ratio (\%) instead of showing absolute WAF numbers?)} 
+	}
 	\label{fig:internal}
 	%\vspace{-36pt}
 \end{figure}
@@ -184,7 +188,9 @@ separate short-lived data from the first phase exploiting the lifetime character
 \begin{figure}[t]
 	\centering
 	\includegraphics[width=0.7\linewidth]{figure/pctable}
-	\caption{Request portion comparison of stream 0 with PC-stream table.}
+	\caption{Request portion comparison of stream 0 with PC-stream table.
+		\textcolor{red}{(TODO: How about adding the size of PC-stream table? It was mentioned in
+		the text of the paper.)} }
 	\label{fig:pctable}
 	%\vspace{-36pt}
 \end{figure}
