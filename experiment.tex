@@ -119,36 +119,31 @@ As shown in Fig. 6, \textsf{\small PCStream$^*$} reduced WAF by up to 30\% over 
 	%\vspace{-36pt}
 \end{figure}
 
-In order to better understand how \textsf{\small PCStream} achieved a high reduction in WAF, 
-we measured per-stream lifetime distributions under each 
-technique for the \texttt{Mixed 1} scenario.
-Fig.~\ref{fig:distribution} shows a box plot of data lifetimes from the 
-25th percentile to the 75th percentile.
-As shown in Fig.~\ref{fig:distribution}, 
-streams in both \textsf{\small PCStream} and Manual are divided into two groups, 
-$G1$ = $\{$1, 2, 3, 4, 5$\}$ and $G2$ = $\{$6, 7, 8$\}$, 
-where $G1$ includes streams with short lifetimes and small variances 
-(i.e., streams 1, 2, 3, 4, and 5) 
-and $G2$ includes streams with large lifetimes and large variances (i.e., streams 6, 7, and 8).  
-In PCStream, every streams especially streams in G2 showed smaller variance than 
-Manual.
-This is because long-lived data in those streams are moved to internal streams, thus 
-reducing the lifetime variance.
-Since the GC copy cost is affected by how data in $G1$ and $G2$ are mixed into the same block, 
-\textsf{\small PCStream} can significantly reduce the GC overhead 
-by avoiding such data mixtures in the same block by separating $G1$ and $G2$ into different streams. 
+To better understand the benefit of \textsf{\small PCStream} on WAF reduction,
+we measured per-stream lifetime distributions for the \texttt{Mixed 1}
+scenario.  Fig.~\ref{fig:distribution} shows a box plot of data lifetimes from
+the 25th to the 75th percentile.  As shown in Fig.~\ref{fig:distribution},
+streams in both \textsf{\small PCStream} and Manual are roughly categorized as
+two groups, $G1$ = $\{$1, 2, 3, 4, 5$\}$ and $G2$ = $\{$6, 7, 8$\}$, where $G1$
+includes streams with short lifetimes and small variances (i.e., streams 1, 2,
+3, 4, and 5) and $G2$ includes streams with large lifetimes and large variances
+(i.e., streams 6, 7, and 8). The stream 0 does not belong to any groups as it
+is assigned to requests whose lifetimes are unknown.  Even though the variance
+in the stream 0 is wider than that in Manual, PCStream showed similar
+per-stream distributions as Manual. In particular, for the streams in $G2$,
+PCStream exhibited smaller variance than Manual, which means that PCStream
+separates cold data from hot data efficiently.
 
-On the other hand, AutoStream was not able to achieve small variance of data lifetimes in a stream.
-AutoStream allocates data in a address range to stream 1 at first.
-The data will be allocated to stream 2 when the frequency of the range hits the 
-pre-defined threshold which means the address range holds hotter data.
-However, since there is no strong relation between hotness of data and the address in RocksDB
-or GCC workload, 
-long-lived data can be placed to the hot address range which results 
-very high lifetime variances for all the streams.
-Since a block with very small number of valid pages will be easily involved to GC,
-long-lived data in stream 8 is the worst case scenario 
-for preventing valid page copies during GC.
+AutoStream was not able to achieve small variance of data lifetimes in
+comparison with PCStream and Manual. At first, AutoStream assigns data to the
+stream 0 and then increases the stream number according to their update
+frequency. In Fig.~\ref{fig:distribution}, we found that short-lived data were
+generally allocated to higher streams.  However, high variance observed across
+all the streams indicates hot data are often mixed up with cold one.  This is
+an expected result. In RocksDB and GCC workloads, there is no strong relation
+between hotness of data and LBA.  Thus, long-lived data are often written to
+LBAs where short-live data were previously written to, and it results in very
+high lifetime variances for all the streams.
 
 \subsection{Impact of the Internal Stream}
 
