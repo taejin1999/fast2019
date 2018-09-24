@@ -30,7 +30,7 @@ We have carried out experiments with various benchmark programs, including
 RocksDB~\cite{}, Cassandra~\cite{}, SQLite~\cite{}, and GCC~\cite{}, each of
 which generates distinct write patterns.  RocksDB and Cassandra have
 append-only write patterns; SQLite has in-place update write patterns; GCC has
-a write-once pattern.  We also run the combinations of multiple programs
+write-once patterns.  We also run the combinations of multiple programs
 simultaneously for assessments under more realistic environments.  Yahoo! Cloud
 Serving Benchmark (YCSB)~\cite{YCSB} with 120,000,000 keys runs on top of
 RocksDB and Cassandra.  Both RocksDB and Cassandra are based on the LSM-tree
@@ -65,40 +65,55 @@ with user files before benchmarks run.
 	%\vspace{-36pt}
 \end{figure}
 
-We compared WAF of the existing techniques with \textsf{\small PCStream} for
-various workloads and the result is shown in Fig.~\ref{fig:waf}.
-\textsf{\small PCStream} was quite effective in reducing WAF, thus achieving an
-equivalent level of the WAF reduction as in \textsf{\small Manual}.  For
-example, \textsf{\small PCStream}  reduced WAF by 63\% over \textsf{\small
-Baseline} on average.  \textsf{\small PCStream} also outperformed
-\textsf{\small AutoStream} by reducing WAF by 49\% on average.  The result
-shows that separating short-lived data (e.g., log or temp files) from
-long-lived one (e.g., compaction or result files) using PC was quite effective
-in reducing WAF.  Moreover, \textsf{\small PCStream} even showed similar WAF to
-\textsf{\small Manual}, reducing it by up to 69\% over \textsf{\small
-AutoStream} for \texttt{Mixed 1} case.
+We compared WAF of the existing techniques with \textsf{PCStream} for various
+workloads, and the result is shown in Fig.~\ref{fig:waf}.  Overall,
+\textsf{PCStream} was as efficient as \textsf{Manual}; Across all the
+benchmarks, \textsf{PCStream} showed quite similar WAF values as
+\textsf{Manual}. \textsf{PCStream} reduced WAF values by 63\% and 49\% over
+\textsf{Baseline} and \textsf{AutoStream}, respectively, on average.  The
+result shows that separating short-lived data (e.g., log or temp files) from
+long-lived one (e.g., compaction or result files) using PC was quite effective.
 
-AutoStream was not able to achieve high WAF reduction because of 
-the lack of relationship between hotness and address in the general I/O workloads.
-As a result, AutoStream showed WAF larger than 2 for all the cases except SQLite.
-Only SQLite has in-place update pattern for log files, but the larger amount of data are
-written for database files whose lifetimes are determined by the client
-which makes hard to predict their lifetime by the address.
-In PCStream, however, long-lived data in database files are moved to internal streams
-during GC so that we can further reduce WAF.
+As expected, \textsf{Baseline} showed the worst performance among all the
+techniques.  We also observed that AutoStream was not able to achieve high WAF
+reduction.  This was because the lack of relationship between hotness of data
+and LBAs. Except for SQLite, all other benchmarks wrote data in an append-only
+and/or a write-only manner. Since \textsf{PCStream} and \textsf{Manual} did not
+depend upon LBAs for hot-cold separation, they performed well consistently,
+regardless of write access patterns.
 
-For GCC and mixed workloads, PCStream achieved even better than Manual
-since the Manual scheme has static stream allocation.
-In Manual, once data types is mapped to the stream, the mapping is not changed 
-during runtime.
-For complex workloads which have large number of PCs such as mixed cases,
-it is difficult to expect data lifetimes in detail based on the data types.
-If the lifetime pattern is changed during runtime or the programmer choose
-second best stream mapping,
-Manual scheme lose the potential benefit in reducing WAf.
-However, the reclustering enables PCStream to adapt changing workload or find
-better stream mapping.
-The detailed analysis will be shown in the following subsections.
+
+%Only SQLite had in-place update patterns for log files, 
+%but the larger amount of data were written to database files 
+%whose lifetimes are determined by the client
+%which makes hard to predict their lifetime by the address.  In PCStream,
+%however, long-lived data in database files are moved to internal streams during
+%GC so that we can further reduce WAF.
+
+One of the noticeable observations in Fig.~\ref{fig:waf} was that PCStream
+performed even better than Manual for GCC, Mixed 1, and Mixed 2.  Those
+benchmarks created many streams larger than ones supported by PM963.  In
+\textsf{Manual}, application code was manually annotated at offline, so that
+write I/Os from specific routines were assigned to designated SSD stream IDs.
+Hence, it is impossible to know which applications run simultaneously, how many
+streams would be created by them, and how to map those streams to SSD streams
+in an optimal manner. Consequently, assigned stream IDs cannot be changed or
+adjusted at run time adapting to the characteristics of programs running.
+Unlike \textsf{Manual}, \textsf{PCStream} collected all PCs at run time,
+clustered, and assigned them to SSD stream IDs, thereby outperforming
+\textsf{Manual}.
+
+%since the Manual scheme has static stream allocation.
+%In Manual, once data types is mapped to the stream, the mapping is not changed 
+%during runtime.
+%For complex workloads which have large number of PCs such as mixed cases,
+%it is difficult to expect data lifetimes in detail based on the data types.
+%If the lifetime pattern is changed during runtime or the programmer choose
+%second best stream mapping,
+%Manual scheme lose the potential benefit in reducing WAf.
+%However, the reclustering enables PCStream to adapt changing workload or find
+%better stream mapping.
+%The detailed analysis will be shown in the following subsections.
 
 \begin{comment}
 For example, both \textsf{\small PCStream} and \textsf{\small Manual} reduced WAF by 38\% over \textsf{\small Baseline} for the \texttt{UR} case. 
