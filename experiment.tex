@@ -53,7 +53,7 @@ clustering process effective for the GCC and mixed workloads.
 
 \begin{figure}[t]
 	\centering
-	\includegraphics[width=0.9\linewidth]{figure/WAF}
+	\includegraphics[width=0.9\linewidth]{figure/waf}
 	\caption{The WAF comparison for various workloads.}
 	\label{fig:waf}
 	%\vspace{-36pt}
@@ -105,7 +105,7 @@ Fig. 6 also indicates that the two-phase stream assignment technique is effectiv
 As shown in Fig. 6, \textsf{\small PCStream$^*$} reduced WAF by up to 30\% over \textsf{\small AutoStream}.  
 \end{comment}
 
-\subsection{Per-stream Lifetime Distribution}
+\subsection{Per-stream Lifetime Distribution Analysis}
 
 \begin{figure}[t]
 	\centering
@@ -146,7 +146,7 @@ Since a block with very small number of valid pages will be easily involved to G
 long-lived data in stream 8 is the worst case scenario 
 for preventing valid page copies during GC.
 
-\subsection{Impact of the Internal Stream}
+\subsection{Analysis of the Internal Stream Impact}
 
 To understand the impact of the
 two-phase assignment, in addition, we compared each techniques
@@ -164,8 +164,8 @@ As shown in Fig.~\ref{fig:internal}, the WAF for Baseline with internal streams 
 larger than 2 because of the page copies from the first phase.
 Similarly, for AutoStream, the benefit of internal stream was marginal 
 because it can not prevent writing long-lived data to the stream of short-lived data.
-Unlike other techniques, since PCStream can effectively separate short-lived data
-from the first phase, we can achieve lower WAF.
+Unlike other techniques, we can achieve lower WAF because PCStream can effectively 
+separate short-lived data from the first phase exploiting the lifetime characteristics of PCs.
 
 
 \begin{figure}[t]
@@ -177,7 +177,7 @@ from the first phase, we can achieve lower WAF.
 \end{figure}
 
 
-\subsection{Impact of PC-stream table}
+\subsection{Analysis of the PC-stream table Impact}
 
 \begin{figure}[t]
 	\centering
@@ -193,12 +193,12 @@ PCs of frequently launched and terminated process can be directly allocated with
 waiting for sufficient lifetime values are collected.
 Fig.~\ref{fig:pctable} shows the request portion of stream 0, where 
 awaiting requests are allocated.
-Except GCC, DB applications run continuously so the benefit of using PC-stream table
-was very small. 
+As shown in Fig.~\ref{fig:pctable}, DB applications run 
+continuously so the benefit of using PC-stream table was very small. 
 However, since GCC is executed repeatedly, 6 percent of requests are directly
 allocated to the desinated streams based on the lifetime information from the 
 previous execution. 
-Thanks to the direct allocation with PC-stream table, WAF was reduced from 1.96 to 1.54
-for GCC workload.
+Due to the direct allocation with PC-stream table, PCStream can 
+reduce WAF from 1.96 to 1.54 for GCC workload.
 
 
