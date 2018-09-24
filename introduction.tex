@@ -16,7 +16,7 @@ Multi-streamed SSDs provide a special interface mechanism for
 a host system, called streams\footnote{In this paper, we use ``streams''
 and ``physical streams'' interchangeably.},
 with which data separation decisions 
-on the host level can be delivered to SSDs~\cite{T10, MultiStream}.  
+{\it on the host level} can be delivered to SSDs~\cite{T10, MultiStream}.  
 When the host system assigns two data $D_1$ and $D_2$ to 
 different streams $S_1$ and $S_2$, respectively, a multi-streamed SSD 
 places $D_1$ and $D_2$ in different blocks, which belong to $S_1$ and $S_2$, respectively.
@@ -24,7 +24,8 @@ When $D_1$ and $D_2$ have distinct update patterns, say, $D_1$ with a short life
 and $D_2$ with a long lifetime, allocating $D_1$ and $D_2$ to different streams 
 can be helpful in minimizing the copy cost of
 garbage collection by separating hot data from cold data.  
-When streams are properly managed, they can significantly
+Since data separation decisions can be made more intelligently on the host level over on the SSD level, 
+when streams are properly managed, they can significantly
 improve both the performance and lifetime of 
 flash-based SSDs~\cite{MultiStream, Level, FStream, vStream, AutoStream}.
 We assume that a multi-streamed SSD supports $n$ streams, $S_0$, ..., $S_{n-1}$.
@@ -32,8 +33,8 @@ We assume that a multi-streamed SSD supports $n$ streams, $S_0$, ..., $S_{n-1}$.
 In order to maximize the potential benefit of multi-streamed
 SSDs in practice, several requirements need to be satisfied both for 
 stream management and for SSD stream implementation.
-First, a fully automatic management of streams is essential without requiring 
-any program changes for stream management over general I/O workloads.
+First, stream management should be supported in a fully automatic fashion 
+over general I/O workloads without any manual work.
 For example, if an
 application developer should manage stream allocations {\it manually} for 
 a given SSD, multi-streamed SSDs are difficult to be 
@@ -91,7 +92,7 @@ kernel with no manual work.  In order to
 seamlessly support various SSDs with different numbers of streams, \textsf{\small PCStream} first maps 
 each program context to a logical (i.e., virtual) stream with no restriction 
 on the number of logical streams.
-For logical streams allocated, \textsf{\small PCStream} groups ones with similar data lifetimes 
+For given logical streams, \textsf{\small PCStream} groups ones with similar data lifetimes 
 and assigns them to physical streams using the k-means clustering algorithm~\cite{kmeans}. 
 Since program contexts focus on the semantic aspect of I/O execution as a lifetime
 classifier, not on the low-level details such as LBAs and access patterns, 
@@ -110,23 +111,20 @@ have rather large variances.
 In \textsf{\small PCStream}, 
 when such a program context {\it $PC_j$} is observed 
 (which was mapped to a stream {\it $S_k$}), 
-the long-lived data of {\it $PC_j$} are moved to a different streamof {\it $S_k'$}
+the long-lived data of {\it $PC_j$} are moved to a different stream {\it $S_{k'}$}
 during GC.  
-The stream {\it $S_k'$} prevents the long-lived data of the stream {\it $S_k$} 
+The stream {\it $S_{k'}$} prevents the long-lived data of the stream {\it $S_k$} 
 from being mixed with future short-lived data of the stream {\it $S_k$}.
 
 When several program contexts have a large variance in their data lifetimes, 
-the required number of streams can quickly increase over the number of physical streams.
-In order to effectively increase the  number of streams, we propose a new stream type, 
+the required number of streams can quickly increase if streams can efficiently 
+distinguish data with different lifetimes.
+In order to effectively increase the number of streams, we propose a new stream type, 
 called an internal stream, which can be used only for garbage collection.
 Unlike physical streams, internal streams can be efficiently
 implemented at low cost without increasing the SSD resource budget.  
 In the current version of \textsf{\small PCStream}, we create the same number of internal streams 
 as the physical streams, effectively doubling the number of available streams. 
-Using internal streams, \textsf{\small PCStream} can effectively overcome
-the diffcult stream allocation problem with program
-contexts with large variances without consuming valuable normal
-streams.
 
 In order to evaluate the effectiveness of \textsf{\small PCStream}, 
 we have implemented \textsf{\small PCStream}
@@ -136,7 +134,7 @@ Our experimental results show that \textsf{\small PCStream}
 can reduce the GC overhead as much as a highly-optimized 
 manual stream management technique while requiring no code modification.  
 Furthermore, \textsf{\small PCStream} outperformed \textsf{\small AutoStream} 
-by reducing the average WAF by 35\%.
+by reducing the average WAF by 49\%.
 
 The rest of this paper is organized as follows. 
 In Section 2, we explain the key limitations of 

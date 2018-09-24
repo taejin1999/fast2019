@@ -22,7 +22,7 @@ In this section, we explain the detailed implementation of \textsf{\small
 PCStream}.  Fig.~\ref{fig:architecture} shows an overall architecture of
 \textsf{\small PCStream}. The \textit{PC extractor module} is implemented as
 part of a kernel's system call handler as already described in
-Section~\ref{sec:internal }, and is responsible for computing a PC signature
+Section~\ref{sec:internal}, and is responsible for computing a PC signature
 from applications.  A PC signature is then delivered to the \textit{PC-lifetime
 manager}, which estimates expected lifetimes of data belonging to given PCs.
 Since product SSDs only expose a limited number of streams outside, the
@@ -50,7 +50,7 @@ and maintains internal streams stemmed from physical streams.
 %stream ID.  This mapping is required because the number of streams in an SSD
 %is generally less than the number of PCs in host applications.
 
-\subsection{PC lifetime management}
+\subsection{PC Lifetime Management}
 The responsibility of the PC-lifetime manager is for estimating the lifetime of
 data associated with PC signatures. As mentioned before, data belonging to a
 same PC signature could have slightly different lifetimes, but their lifetime
@@ -169,7 +169,7 @@ table have been changed.
 \end{figure}
 
 
-\subsection{PC extraction for indirect writes}
+\subsection{PC Extraction for Indirect Writes}
 One limitation of using PCs to extract I/O characteristics is that it only
 works with C/C++ programs that \textit{directly} call write-related system
 calls.  Many programs, however, often invoke write system calls

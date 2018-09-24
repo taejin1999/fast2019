@@ -4,6 +4,7 @@ as well as stream implementation methods.
 PCStream was motivated to overcome these weaknesses so that multi-streamed
 SSDs can be widely employed in practice.
 
+
 \subsection{No Automatic Stream Management for General I/O Workloads}
 Most existing stream management techniques~\cite{MultiStream, Level, vStream} 
 require programmers to manually allocate streams for their applications.
@@ -23,6 +24,27 @@ Furthermore, many
 techniques also assume that the number of streams is known {\it a priori}.  
 Therefore, when an SSD with a different number of streams is used, 
 these techniques need to re-allocate streams manually.
+
+\begin{figure}[t]
+	\centering
+	\hfill
+	%\vspace{-9pt}
+	%\captionsetup[subfigure]{margin={0cm,1cm}}
+	\subfloat[Lifetime patterns over LBAs]{\includegraphics[width=0.25\textwidth]{figure/lba_lifetime2}}  % data from 0/03031641
+	\hspace{10pt}
+	%\subfloat[Lifetime patterns over LBAs for update workload]{\includegraphics[width=0.215\textwidth]{figure/update_lifetime}}  
+	\hfill
+	\vspace{2pt}
+	\subfloat[Lifetime patterns over time for the chunk A]{\includegraphics[width=0.21\textwidth]{figure/lifetime_in_chunk}} % data from 0/03031641
+	\hspace{10pt}
+	\subfloat[Lifetime patterns over time for the chunk B]{\includegraphics[width=0.21\textwidth]{figure/lifetime_in_chunk4}}
+	%\includegraphics[width=0.9\linewidth]{figure/lba_lifetime} 
+	%\vspace{-3pt}
+	\caption{Lifetime distributions of append-only workload over addresses and times.} %shane part
+	\label{fig:lba_lifetime}
+	%\vspace{-20pt}
+\end{figure}
+
 
 Although \textsf{\small FStream}~\cite{FStream} and \textsf{\small AutoStream}~\cite{AutoStream}
 may be considered 
@@ -55,26 +77,6 @@ when the data is first written and when the data is invalidated
 by an overwrite or a TRIM command.
 As shown in Fig.~\ref{fig:lba_lifetime}(a), 
 there is no strong correlation between LBAs and their lifetimes in RocksDB.  
-
-\begin{figure}[t]
-	\centering
-	\hfill
-	%\vspace{-9pt}
-	%\captionsetup[subfigure]{margin={0cm,1cm}}
-	\subfloat[Lifetime patterns over LBAs]{\includegraphics[width=0.25\textwidth]{figure/lba_lifetime2}}  % data from 0/03031641
-	\hspace{10pt}
-	%\subfloat[Lifetime patterns over LBAs for update workload]{\includegraphics[width=0.215\textwidth]{figure/update_lifetime}}  
-	\hfill
-	\vspace{2pt}
-	\subfloat[Lifetime patterns over time for the chunk A]{\includegraphics[width=0.21\textwidth]{figure/lifetime_in_chunk}} % data from 0/03031641
-	\hspace{10pt}
-	\subfloat[Lifetime patterns over time for the chunk B]{\includegraphics[width=0.21\textwidth]{figure/lifetime_in_chunk3}}
-	%\includegraphics[width=0.9\linewidth]{figure/lba_lifetime} 
-	%\vspace{-3pt}
-	\caption{Lifetime distributions of append-only workload over addresses and times.} %shane part
-	\label{fig:lba_lifetime}
-	%\vspace{-20pt}
-\end{figure}
 
 
 We also analyzed 
