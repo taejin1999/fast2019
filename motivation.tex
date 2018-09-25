@@ -17,7 +17,7 @@ understanding and expertise on data temperature (i.e., frequency of updates)
 and internals of file systems/database systems.
 \textsf{\small vStream}~\cite{vStream} 
 is an exception to this 
-restriction by allocating streams to virtual streams, not physical streams.  
+restriction by allocating streams to virtual streams, not external streams.  
 However, even in \textsf{\small vStream}, virtual stream allocations are left to
 programmer's decisions.
 Furthermore, many
@@ -58,7 +58,7 @@ the kernel.
 However, since \textsf{\small AutoStream} predicts data lifetimes using the
 access frequency of the same LBA, \textsf{\small AutoStream} does not work well 
 {\color{blue}
-when no apparent {\it locality} on LBA accesses exist in applications.  
+when no apparent {\it locality} on LBA accesses exists in applications.  
 For example, in recent data-intensive applications 
 such as RocksDB~\cite{RocksDB} and Cassandra~\cite{Cassandra}, 
 majority of data are written in an append-only manner,
@@ -82,7 +82,7 @@ there is no strong correlation between LBAs and their lifetimes in RocksDB.
 We also analyzed 
 if the lifetimes of LBAs change under some predictable patterns over time 
 although the overall lifetime distribution shows large variances.
-Figs.~\ref{fig:lba_lifetime}(c) and ~\ref{fig:lba_lifetime}(d) shows
+Figs.~\ref{fig:lba_lifetime}(c) and ~\ref{fig:lba_lifetime}(d) show
 scatter plots of data lifetimes over the logical time 
 for two specific 1-MB chunks with 256 pages. 
 As shown in Figs.~\ref{fig:lba_lifetime}(c) and ~\ref{fig:lba_lifetime}(d), 
@@ -97,7 +97,7 @@ LBAs are not useful in predicting data lifetimes reliably.
 {\color{blue}
 In practice, the applicability of LBA-based data separation techniques is quite 
 limited to a few cases only when the LBA access
-locality is obvious in I/O activities such as metadata file or log file updates.  
+locality is obvious in I/O activities such as updating metadata files or log files.  
 }
 In order to support {\it general} I/O workloads in an automatic fashion, stream 
 management decisions should be based on higher-level information
@@ -123,8 +123,9 @@ higher the number of streams, the more efficient the performance of multi-stream
 {\color{blue}
 For example, Fig.~\ref{fig:stream_perf} shows how IOPS values in RocksDB
 change as the number of streams increases on a Samsung PM963 multi-streamed SSD
-with maximum 8 streams.
-The IOPS was measured by the \texttt{db\_bench} benchmark.
+with 8 streams.
+The \texttt{db\_bench} benchmark was used for measuring IOPS values with streams
+manually allocated.
 As shown in Fig.~\ref{fig:stream_perf}, the IOPS is continuously improving
 until 6 streams are used when dominant I/O activities with different data lifetimes
 are sufficiently separated.

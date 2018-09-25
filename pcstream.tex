@@ -20,20 +20,26 @@
 
 In this section, we explain the detailed implementation of \textsf{\small
 PCStream}.  Fig.~\ref{fig:architecture} shows an overall architecture of
-\textsf{\small PCStream}. The \textit{PC extractor module} is implemented as
+\textsf{\small PCStream}. The \textit{PC Extractor} is implemented as
 part of a kernel's system call handler as already described in
 Section~\ref{sec:internal}, and is responsible for computing a PC signature
-from applications.  A PC signature is then delivered to the \textit{PC-lifetime
-manager}, which estimates expected lifetimes of data belonging to given PCs.
-Since product SSDs only expose a limited number of streams outside, the
-\textit{PC-stream cluster} groups PCs with similar lifetimes using a clustering
-policy, assigning PCs in a same group to an equivalent stream ID.  All the
-collected information, including 1) PC signatures, 2) their expected lifetimes, and 3)
-corresponding stream IDs, are maintained in the \textit{PC-stream table}.  The
-information in the table is kept updated adapting to changing workloads and is
-used for deciding designated stream IDs for incoming data. Finally, the
+from applications.  
+The PC signature is used for deciding the corresponding stream ID\footnote{
+We call {\it i} the stream ID of $S_i$.} from the PC attribute table.
+PCStream maintains various per-PC attributes in the PC attribute table
+including PC signatures, expected data lifetimes, and stream IDs.
+In order to keep the PC attribute table updated over changing workloads,
+the computed PC signature with its LBA information is also sent to the 
+{\it lifetime manager}, which 
+estimates expected lifetimes of data belonging to given PCs.
+Since commercial multi-streamed SSDs only expose a limited number of streams to a host, 
+the \textit{PC2Stream mapper} groups PCs with similar lifetimes using a clustering
+policy, assigning PCs in the same group to the same stream.  
+Whenever the lifetime manager or the PC2Stream mapper are invoked,
+the PC attribute table is updated with new outputs from these modules.
+Finally, the
 \textit{internal stream manager} implemented inside an SSD creates, removes,
-and maintains internal streams stemmed from physical streams.
+and maintains internal streams associated with external streams.
 
 %the lifetime of data written by write-related system calls can be
 %monitored at the program context level.  

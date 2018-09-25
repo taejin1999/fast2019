@@ -5,7 +5,7 @@ memory does not support in-place updates.
 Since the efficiency of garbage collection significantly affects  
 both the performance and lifetime of SSDs, garbage collection has been extensively 
 investigated so that the garbage collection overhead can be reduced
-~\cite{DAC, GCGreedy, GCVictim, GCTTFlash, HotCold}.  
+~\cite{DAC, WriteAmplification, GCGreedy, GCVictim, GCTTFlash, HotCold}.  
 For example, hot-cold separation techniques are commonly used inside an SSD 
 so that quickly invalidated pages are not mixed with long-lived data in the same block.   
 For more efficient garbage collection, many techniques also exploit
@@ -14,7 +14,7 @@ the efficient data separation inside the SSD~\cite{JiTGC, ShadowGC}.
 
 Multi-streamed SSDs provide a special interface mechanism for 
 a host system, called streams\footnote{In this paper, we use ``streams''
-and ``physical streams'' interchangeably.},
+and ``external streams'' interchangeably.},
 with which data separation decisions 
 {\it on the host level} can be delivered to SSDs~\cite{T10, MultiStream}.  
 When the host system assigns two data $D_1$ and $D_2$ to 
@@ -28,7 +28,7 @@ Since data separation decisions can be made more intelligently on the host level
 when streams are properly managed, they can significantly
 improve both the performance and lifetime of 
 flash-based SSDs~\cite{MultiStream, Level, FStream, vStream, AutoStream}.
-We assume that a multi-streamed SSD supports $n$ streams, $S_0$, ..., $S_{n-1}$.
+We assume that a multi-streamed SSD supports $m$ streams, $S_0$, ..., $S_{m-1}$.
 
 In order to maximize the potential benefit of multi-streamed
 SSDs in practice, several requirements need to be satisfied both for 
@@ -89,11 +89,10 @@ Furthermore, most dominant I/O activities tend to show distinct data lifetime ch
 By identifying dominant I/O activities using program contexts during run time, 
 \textsf{\small PCStream} can automate the whole process of stream allocation within the 
 kernel with no manual work.  In order to
-seamlessly support various SSDs with different numbers of streams, \textsf{\small PCStream} first maps 
-each program context to a logical (i.e., virtual) stream with no restriction 
-on the number of logical streams.
-For given logical streams, \textsf{\small PCStream} groups ones with similar data lifetimes 
-and assigns them to physical streams using the k-means clustering algorithm~\cite{kmeans}. 
+seamlessly support various SSDs with different numbers of streams, \textsf{\small PCStream} 
+groups program contexts with similar data lifetimes 
+depending on the number of supported streams
+using the k-means clustering algorithm~\cite{kmeans}. 
 Since program contexts focus on the semantic aspect of I/O execution as a lifetime
 classifier, not on the low-level details such as LBAs and access patterns, 
 \textsf{\small PCStream} easily 
@@ -121,10 +120,10 @@ the required number of streams can quickly increase if streams can efficiently
 distinguish data with different lifetimes.
 In order to effectively increase the number of streams, we propose a new stream type, 
 called an internal stream, which can be used only for garbage collection.
-Unlike physical streams, internal streams can be efficiently
+Unlike external streams, internal streams can be efficiently
 implemented at low cost without increasing the SSD resource budget.  
 In the current version of \textsf{\small PCStream}, we create the same number of internal streams 
-as the physical streams, effectively doubling the number of available streams. 
+as the external streams, effectively doubling the number of available streams. 
 
 In order to evaluate the effectiveness of \textsf{\small PCStream}, 
 we have implemented \textsf{\small PCStream}
@@ -133,8 +132,8 @@ extended a Samsung PM963 SSD to support internal streams.
 Our experimental results show that \textsf{\small PCStream}
 can reduce the GC overhead as much as a highly-optimized 
 manual stream management technique while requiring no code modification.  
-Furthermore, \textsf{\small PCStream} outperformed \textsf{\small AutoStream} 
-by reducing the average WAF by 49\%.
+Over \textsf{\small AutoStream}, \textsf{\small PCStream} improves the average IOPS
+by XXX\% while reducing the average WAF by 49\%.
 
 The rest of this paper is organized as follows. 
 In Section 2, we explain the key limitations of 
