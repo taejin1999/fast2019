@@ -82,10 +82,8 @@ classification unit for representing I/O activity regardless of the type of I/O 
 A program context (PC)~\cite{PC, PC2}, which represents an execution path of a program 
 up to a write system call,
 is known to be effective in 
-{\color{blue}
 representing dominant I/O activities~\cite{PCHa}.  
 Furthermore, most dominant I/O activities tend to show distinct data lifetime characteristics.
-}
 By identifying dominant I/O activities using program contexts during run time, 
 \textsf{\small PCStream} can automate the whole process of stream allocation within the 
 kernel with no manual work.  In order to
@@ -100,12 +98,10 @@ supports different I/O workloads regardless of whether it is update-only or appe
 
 Although many program contexts show that their data lifetimes are 
 narrowly distributed, we observed that 
-{\color{blue}
 this is not necessarily true because of several reasons.  
 For example, when a single program context handles multiple types of data with 
 different lifetimes, data lifetime distributions of such
 program contexts  
-}
 have rather large variances.
 In \textsf{\small PCStream}, 
 when such a program context {\it $PC_j$} is observed 
