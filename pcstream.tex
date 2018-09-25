@@ -57,70 +57,90 @@ and maintains internal streams associated with external streams.
 %is generally less than the number of PCs in host applications.
 
 \subsection{PC Lifetime Management}
-The responsibility of the PC-lifetime manager is for estimating the lifetime of
-data associated with PC signatures. As mentioned before, data belonging to a
-same PC signature could have slightly different lifetimes, but their lifetime
-trends are almost identical, which means that PC signatures is useful to
-roughly estimate the lifetime of given data.
-%but more accurate data separation
-%is required for data that belong to the same PC but have different lifetimes.
-%This issue will be discussed in Section 5.5 in detail.
+The responsibility of the lifetime manager is for estimating the lifetime of
+data associated with a PC. 
+Except for outlier PCs, most data from the same PC tend to show similar 
+data lifetimes with small variances.
 
 \textbf{Lifetime estimation:}
-In \textsf{PCStream}, the lifetime of data is defined to be an elapsed time
-from when data are written until the data are invalided by TRIM commands or
-overwrites. Whenever a new write request arrives that attempts to write data to
-free LBAs, the PC-lifetime manager gets 1) its written time and 2) a PC
-signature, along with 3) a list of LBAs, and put them into a candidate table.
-Upon receiving TRIM commands or overwrite requests that update previously
-written LBAs, the lifetime manager looks for a PC signature overlapped with
-requested LBAs in the table and computes the lifetime (\textit{i.e.,} current
-time - written time) of the corresponding PC.  The PC signature and the
-expected lifetime are then put into a PC-stream table.  The written time of the
-PC is replaced with the current time to keep track of future TRIM or overwrite
-requests.  
+Whenever a new write request {\it R} arrives, 
+the lifetime manager stores the write request time,
+the PC signature, $PC_i$, and the LBA list of {$R$} into the live LBA table.
+The live LBA table, indexed by an LBA, is used in computing the lifetime of data stored
+at a given LBA which belongs to $PC_i$.
+Upon receiving TRIM commands (that delete previously written LBAs)
+or overwrite requests (that update previously
+written LBAs), the lifetime manager searches the live LBA table for a PC
+signature $PC_{found}$ with the LBA list which includes the deleted/updated LBAs.
+The new lifetime $l_{new}$ of $PC_{found}$ is estimated using the lifetime 
+of the matched LBA from the live LBA table. The weighted average of the existing
+lifetime $l_{old}$ for $PC_{found}$ and $l_{new}$ is used to update the $PC_{found}$
+entry in the PC attribute table.
+Note that the written time entry of the live LBA table is updated differently 
+depending on TRIM commands or overwrite requests.
+The written time entry becomes invalid for a TRIM command while it is updated by 
+the current time for an overwrite request.
 
-Maintaining the candidate table in DRAM could be a serious burden owing to its
-huge size. To mitigate this, the lifetime estimator slightly sacrifices
-accuracy by increasing the granularity of LBA to 1 MB, instead of 4 KB.  The
-candidate table is indexed by 1 MB LBA, and each table entry holds PC
-signatures and written times. Because of the coarse-grained indexing, each entry
+Maintaining the live LBA table, which is indexed by an LBA unit,
+in DRAM could be a serious burden owing to its
+huge size. In order to mitigate the DRAM memory requirement, 
+the lifetime manager slightly sacrifices
+the accuracy of computing LBA lifetime by increasing the 
+granularity of LBA lifetime prediction to 1 MB, instead of 4 KB.  The
+live LBA table is indexed by 1 MB LBA, and each table entry holds PC
+signatures and written times over a 1-MB LBA range. 
+Because of the coarse-grained indexing, each entry
 could have multiple signatures and written times, and the same PC could span
 across multiple entries.  If the same PC has different lifetimes, we take the
-average one as PC's lifetime. 
+arithmetic mean as the PC lifetime. 
 To limit the table size, if the table reaches a
-threshold size, the least recently referenced one is removed. In the current
-implementation, the threshold is set to 64 MB.
+threshold size, the least recently referenced entry is evicted from 
+the LBA table.
+In the current implementation, the threshold is set to 64 MB, thus 
+holding 64 entries only.
 %For a 512 GB SSD with 1 MB-sized unit, assuming the table entry size is 48 B, 
 %about 24 MB of host memory is required to hold the candidate table.
 
-\textbf{PC-stream table:}
-The PC-stream table keeps PC signatures and its expected lifetimes. To quickly
-retrieve expected lifetime given a PC signature, the PC-stream table is managed
+\textbf{PC attribute table:}
+The PC attribute table keeps PC signatures and its expected lifetimes. To quickly
+retrieve the expected lifetime of a requested PC signature, 
+the PC attribute table is managed
 through a hash data structure. Each hash entry requires only 12 bytes: 64-bit
-for a PC signature and 32-bit for an expected lifetime.  The table size is thus
-quite small, such that it can be entirely loaded in DRAM. Our observations say
-that the PC-stream table only consumes several tens or hundreds of KB of DRAM.
+for a PC signature and 32-bit for a predicted lifetime.  The table size is thus
+quite small so that it can be entirely loaded in DRAM. 
+From our evaluations, the DRAM size of the PC attribute table was sufficient 
+with several tens of hundreds of KB.
 
-The important point that should be noted here is that the PC-stream table is
-able to capture a long-term history of \textit{programs}' I/O behaviors,
-regardless of their creation and deletion as the form of \textit{processes} in
-the system. Thus, even for short-lived processes (\textit{e.g.,} \texttt{cpp}
-and \texttt{cc1} for GCC) that are launched and terminated frequently, their
-I/O behaviors are collected and applied to the PC-stream table.  This is
-because PCs are unique and consistent across executions of a program.  Every PC
+In addition to the main function of the PC attribute table that maintains 
+the data lifetime for a PC, the $memory-resident$ PC attribute table has 
+another quite interesting benefit for the efficient
+stream management.  Since a PC signature of an I/O activity is virtually 
+guaranteed to be {\it unique} across {\it all} applications (the property 1),  
+and a PC signature does not change over different executions of the same 
+application (the property 2), the PC attribute table can capture a long-term 
+history of programs' I/O behaviors.  
+Because of the above two properties of a PC signature, PCStream can 
+exploit the I/O behavior of even short-lived processes 
+(e.g., cpp and cc1 for GCC)  that are launched and terminated frequently.  
+When short-lived processes are frequently executed, the PC attribute table 
+can hold their PC attributes from their previous executions, 
+thus enabling quick but accurate stream allocation for short-lived
+processes.
+
+The property (2) is rather straightforward because each PC
 signature is determined by the sum of return addresses inside a process's
 virtual address space.  Unless a program's binary is changed after
 recompilation, those return addresses remain the same, regardless of program's
-execution.  Moreover, the probability that distinct I/O activities that take
+execution.  The property (1) is also somewhat obvious
+from the observation that the probability that distinct I/O activities that take
 different function-call paths have the same PC signature is extremely low. This
 is even true for multiple programs. Even though they are executed in the same
 virtual address space, it is very unlikely that I/O activities of diverged
 programs taking different function-call paths have the same PC.  
 %We will show this in the experimental section. 
 Consequently, this immutable property of
-the PC-stream table makes it possible for us to characterize 
-unique behaviors of individual systems and workloads.
+the PC signature for a given I/O activity makes it possible for us to characterize 
+the given I/O activity in a long-term basis without a risk of PC collisions.
 
 %The PC is determined by the sum of the return address, i.e., the path to reach
 %the write system call.  In general, different I/O activities can not have the
