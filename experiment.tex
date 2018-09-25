@@ -27,7 +27,8 @@ AutoStream} is one that employs an LBA-based data separation technique which is
 implemented at the device driver layer. 
 
 We have carried out experiments with various benchmark programs, including
-RocksDB~\cite{}, Cassandra~\cite{}, SQLite~\cite{}, and GCC~\cite{}, each of
+RocksDB~\cite{RocksDB}, Cassandra~\cite{Cassandra}, 
+SQLite~\cite{SQLite}, and GCC~\cite{GCC}, each of
 which generates distinct write patterns.  RocksDB and Cassandra have
 append-only write patterns; SQLite has in-place update write patterns; GCC has
 write-once patterns.  We also run the combinations of multiple programs
@@ -39,12 +40,12 @@ algorithm, so they have three major I/O activities (e.g.,
 %However, we identified about 5 PCs during runtime and we consider the extra
 %PCs as management use.
 TPC-C~\cite{TPCC} runs on SQLite with 20 warehouses.  Similarly, SQLite has two
-major I/O activities (e.g., \textcolor{red}{logging and YYY}). 
+major I/O activities (e.g., \textcolor{red}{logging and updating DB tables}). 
 %2 kinds of data types in theory but we identified 4 PCs.
 GCC compiles kernel source code 30 times. For the each run, 1/3 of source files
 that are randomly chosen are modified and involved in the compilation.  GCC
-creates many temporary files (e.g., \textcolor{red}{XXX}) as well as long-lived
-files (e.g., \textcolor{red}{YYY}), thereby having more than 20 PCs.  To
+creates many temporary files (e.g., \textcolor{red}{.s, .d, and .rc}) as well as long-lived
+files (e.g., \textcolor{red}{.o}), thereby having more than 20 PCs.  To
 generate mixed workloads, we run RocksDB and GCC scenarios together (denoted by
 Mixed 1), and run SQLite and GCC scenarios at the same time (denoted by Mixed
 2).
@@ -195,11 +196,7 @@ it performed worse than PCStream.
 \begin{figure}[t]
 	\centering
 	\includegraphics[width=0.7\linewidth]{figure/pctable}
-	\caption{Request portion comparison of stream 0 with PC-stream table.
-		\textcolor{red}{
-			(TODO: How about adding the size of PC-stream table? It was mentioned in
-			the text of the paper.)}
-		}
+	\caption{Request portion comparison of stream 0 with PC-stream table.}
 	\label{fig:pctable}
 	%\vspace{-36pt}
 \end{figure}
@@ -221,9 +218,12 @@ history \textsf{PCStream} maintains. As shown in Fig.~\ref{fig:pctable}, in
 RocksDB, Cassandra, and SQLite, the absence of the PC-stream table did not
 affect the number of requests send to the stream 0. This is because those
 programs ran continuously for a long time. Unlike them, GCC involves frequent
-creations and termination of processes (\textit{e.g.}, \textcolor{red}{XXX}).
+creations and termination of processes (e.g., \texttt{cc1}).
 Hence, without the PC-stream table, about 16\% of requests were sent to the
-stream 0. With the PC-stream table, it was reduced to less 10\%. We also
-observed that with, the PC-stream table, the WAF value was reduced from 1.96 to
+stream 0. With the 4 KB-sized PC-stream table, it was reduced to 12\%
+while with 12 KB-sized table, it was reduced to less than 10\%
+and the result is saturated for tables larger than 12 KB.
+We also
+observed that with the PC-stream table, the WAF value was reduced from 1.96 to
 1.54 for GCC.
 

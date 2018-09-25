@@ -5,7 +5,7 @@ memory does not support in-place updates.
 Since the efficiency of garbage collection significantly affects  
 both the performance and lifetime of SSDs, garbage collection has been extensively 
 investigated so that the garbage collection overhead can be reduced
-~\cite{GCGreedy, GCVictim, GCTTFlash, HotCold}.  
+~\cite{DAC, GCGreedy, GCVictim, GCTTFlash, HotCold}.  
 For example, hot-cold separation techniques are commonly used inside an SSD 
 so that quickly invalidated pages are not mixed with long-lived data in the same block.   
 For more efficient garbage collection, many techniques also exploit

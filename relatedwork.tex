@@ -1,12 +1,39 @@
 \section{Related Work}
-Kim et al. proposed an earlier version of the PCStream idea and 
-demonstrated that PCStream can reduce WAF significantly without 
+There has been many research that focus on exploiting streams
+for multi-streamed SSDs~\cite{MultiStream, Level, vStream, FStream, AutoStream, PCStream}. 
+
+Kang {\it et al.} proposed the multi-stream interface with the manual stream allocation
+to separate different data types~\cite{MultiStream}. 
+Yang {\it et al.}, furthermore, insisted to separate data
+of the same data type, such as different levels of compaction data by 
+modifying the RocksDB implementation~\cite{Level}.
+Yong {\it et al.} presented virtual stream management to resolve limited number
+of streams.
+All those studies involve modifying the source code of the target application, leading
+to increase deployment effort.
+Our PCStream does not require manually modifying the application.
+
+Rho {\it et al.} proposed a stream management technique at the file system layer.~\cite{FStream}
+File system metadata and journal are allocated to separate streams.
+Moreover, user data are separated based on the file name or file extension.
+PCStream, however, is not limted to file system data and
+does not require knowledge of file name or file extension.
+
+Yang {\it et al.} presented the automatic stream management technique at the 
+block device layer based on the access patterns of address space.
+Their work does not work well for the application which has no strong relation
+between address and data hotness.
+However, our PCStream can work well for general I/O workloads by exploiting 
+I/O activities of the application.
+
+
+Kim {\it et al.} proposed an earlier version of the PCStream idea and 
+demonstrated that PCStream can reduce WAF without 
 modifying application~\cite{PCStream}. 
 Unlike their work, however, our work treats the PCStream approach
 in a more complete fashion, extensively extending the PCStream approach
-in several dimensions such as the updating workload support, caching
-lifetime for previous PCs. Furthermore, more realistic and detailed 
-evaluations using various applications and an SSD with internal 
-stream support.
-\\
-+ comparison with previous stream mangement techniques will be added
+in several dimensions such as the formal organization of the internal stream,
+maintaining streams for the past PCs and supporting for indirect writes. 
+Furthermore, more realistic and detailed 
+evaluations using various applications and a real SSD with internal 
+stream support are presented in this paper.
