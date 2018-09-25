@@ -55,6 +55,31 @@ Mixed 1), and run SQLite and GCC scenarios at the same time (denoted by Mixed
 To emulate an aged SSD, 90\% of the total SSD capacity was initially filled up
 with user files before benchmarks run.
 
+\subsection{Performance Evaluation}
+\begin{figure}[t]
+	\centering
+	\includegraphics[width=0.9\linewidth]{figure/iops}
+	\caption{The normalized IOPS comparison for various workloads.}
+	\label{fig:iops}
+	\vspace{-20pt}
+\end{figure}
+
+We compared IOPS of the existing techniques with \textsf{\small PCStream} for various 
+workloads.
+For RocksDB and Cassandra, YCSB benchmark showed total IOPS.
+For SQLite, TPC-C benchmark evaluate result IOPS.
+For GCC and mixed workloads, however, we can not get IOPS so
+we measured the number of write requests at the block
+device layer and compute the IOPS by dividing it by the elapsed time.
+Fig.~\ref{fig:iops} shows the IOPS normalized to the \textsf{\small Baseline}.
+By effectively managing streams of a multi-streamed SSD based on PCs,
+\textsf{\small PCStream} increased IOPS by 45\% and 28\% on average over
+\textsf{\small Baseline} and \textsf{\small AutoStream}, respectively.
+Especially, \textsf{\small PCStream} outperformed over \textsf{\small AutoStream}
+by up to 56\% for complex workloads where the number of PCs are larger than 
+the SSD can support such as GCC, Mixed 1 and Mixed 2.
+This high performance improvement came from WAF reduction and the 
+detailed analysis concerned with WAF will be presented in the following subsections.
 
 \subsection{WAF Comparison}
 
@@ -63,25 +88,27 @@ with user files before benchmarks run.
 	\includegraphics[width=0.9\linewidth]{figure/waf}
 	\caption{The WAF comparison for various workloads.}
 	\label{fig:waf}
-	%\vspace{-36pt}
+	\vspace{-10pt}
 \end{figure}
 
-We compared WAF of the existing techniques with \textsf{PCStream} for various
+We compared WAF of the existing techniques with \textsf{\small PCStream} for various
 workloads, and the result is shown in Fig.~\ref{fig:waf}.  Overall,
-\textsf{PCStream} was as efficient as \textsf{Manual}; Across all the
-benchmarks, \textsf{PCStream} showed quite similar WAF values as
-\textsf{Manual}. \textsf{PCStream} reduced WAF values by 63\% and 49\% over
-\textsf{Baseline} and \textsf{AutoStream}, respectively, on average.  The
+\textsf{\small PCStream} was as efficient as \textsf{\small Manual}; Across all the
+benchmarks, \textsf{\small PCStream} showed quite similar WAF values as
+\textsf{\small Manual}. \textsf{\small PCStream} reduced WAF values by 63\% and 49\% over
+\textsf{\small Baseline} and \textsf{\small AutoStream}, respectively, on average.  The
 result shows that separating short-lived data (e.g., log or temp files) from
 long-lived one (e.g., compaction or result files) using PC was quite effective.
 
-As expected, \textsf{Baseline} showed the worst performance among all the
-techniques.  We also observed that AutoStream was not able to achieve high WAF
+As expected, \textsf{\small Baseline} showed the worst performance among all the
+techniques.  We also observed that \textsf{\small AutoStream} was not able to achieve high WAF
 reduction.  This was because the lack of relationship between hotness of data
 and LBAs. Except for SQLite, all other benchmarks wrote data in an append-only
-and/or a write-only manner. Since \textsf{PCStream} and \textsf{Manual} did not
+and/or a write-only manner. Since \textsf{\small PCStream} and \textsf{\small Manual} did not
 depend upon LBAs for hot-cold separation, they performed well consistently,
 regardless of write access patterns.
+As a result, \textsf{\small PCStream} reduced WAF by up to 69\% over 
+\textsf{\small AutoStream}.
 
 
 %Only SQLite had in-place update patterns for log files, 
@@ -132,7 +159,7 @@ As shown in Fig. 6, \textsf{\small PCStream$^*$} reduced WAF by up to 30\% over 
 	\includegraphics[width=1\linewidth]{figure/distribution}
 	\caption{A Comparison of lifetime distributions of the smaller variance streams.}
 	\label{fig:distribution}
-	%\vspace{-36pt}
+	\vspace{-20pt}
 \end{figure}
 
 To better understand the benefit of \textsf{\small PCStream} on WAF reduction,
@@ -187,7 +214,7 @@ it performed worse than PCStream.
 	\includegraphics[width=0.9\linewidth]{figure/internal}
 	\caption{Comparison of WAF w/ and w/o internal streams.}
 	\label{fig:internal}
-	%\vspace{-36pt}
+	\vspace{-20pt}
 \end{figure}
 
 
@@ -198,7 +225,7 @@ it performed worse than PCStream.
 	\includegraphics[width=0.7\linewidth]{figure/pctable}
 	\caption{Request portion comparison of stream 0 with PC-stream table.}
 	\label{fig:pctable}
-	%\vspace{-36pt}
+	\vspace{-20pt}
 \end{figure}
 
 As explained in Section 5, the PC-stream table provides us with a long-term

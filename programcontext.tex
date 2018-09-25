@@ -12,10 +12,10 @@
 \begin{figure}[t]
 %	\vspace{-10pt}
 	\centering
-	%\vspace{-8pt}
-	\includegraphics[width=0.3\textwidth]{figure/writepath}
+	\includegraphics[width=0.4\textwidth]{figure/writepath}
 	\caption{An illustration of (simplified) execution paths of two dominant I/O activities in RocksDB.}
 	\label{fig:iopath}
+	\vspace{-20pt}
 \end{figure}
 
 In developing an efficient data lifetime separator for general I/O workloads,
@@ -74,7 +74,7 @@ leads to a write system call.
 %\vspace{-7pt}
 \caption{Data lifetime distributions of dominant I/O activities in RocksDB, SQLite and GCC.} 
 \label{fig:types_and_PCs}
-%\vspace{-20pt}
+\vspace{-20pt}
 \end{figure*}
 
 \subsection{Program Context as a Unit of Lifetime Classification}
@@ -206,14 +206,14 @@ to back-track return addresses along the call chains.
 	%\subfloat[Abstracted execution paths of two I/O activities of RocksDB.]{\includegraphics[width=0.3\textwidth]{figure/writepath}}  
 	%\vspace{-14pt}
 	%\hfill
-	\subfloat[with the frame pointer.]{\includegraphics[width=0.22\textwidth]{figure/getpc1}}
+	\subfloat[with the frame pointer.]{\includegraphics[width=0.22\textwidth]{figure/getpc_new1}}
 	\hspace{4pt}
-	\subfloat[without the frame pointer.]{\includegraphics[width=0.22\textwidth]{figure/getpc2}}
+	\subfloat[without the frame pointer.]{\includegraphics[width=0.23\textwidth]{figure/getpc2}}
 	%\vspace{-9pt}
 	\caption{Examples of PC extraction methods.}
 	%\caption{An example execution path and its PC extraction.} %shane part
 	\label{fig:getpc}
-	%\vspace{-20pt}
+	\vspace{-20pt}
 \end{figure}
 
 We employ a simple but effective workaround for back-tracking a call stack when

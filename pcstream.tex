@@ -10,7 +10,7 @@
 		An overall architecture of \textsf{\small PCStream}. 
 	}
 	\label{fig:architecture}
-	%\vspace{-22pt}
+	\vspace{-22pt}
 \end{figure}
 
 % stream tbl (X)
@@ -175,80 +175,37 @@ the given I/O activity in a long-term basis without a risk of PC collisions.
 
 \subsection{Mapping PCs to SSD streams}
 
-After estimating expected lifetimes of PC signatures, the PC-stream cluster
+After estimating expected lifetimes of PC signatures, the PC2Stream mapper 
 attempts to group PCs with similar lifetimes into an SSD stream.  This grouping
-process is necessary because while product SSDs only support a limited number
-of stream IDs, the number of unique PCs created is up to more than 20.  
-For grouping, the PC-stream cluster module uses a k-means
-algorithm which is lightweight and is widely used for similar purposes.  To
-quickly assign a proper stream ID to incoming data, we add another field to the
-PC-stream table which keeps a stream ID for each PC signature.  More
+process is necessary because while commercial SSDs only support a limited number
+of streams, the number of unique PCs can be quite large (e.g., 20).  
+For grouping PCs with similar lifetimes, the PC2Stream mapper module uses the k-means
+algorithm~\cite{kmeans} which is widely used for similar purposes.  
+{\color{blue}
+In PCStream, we use the difference in the data lifetime between two PCs 
+as a clustering distance and  generates {\it m} clusters of PCs for $m$ streams.
+This algorithm is particularly well suited for our purpose because 
+it is lightweighted in terms of the CPU cycle and memory requirement.
+}
+To quickly assign a proper stream to incoming data, we add an extra field to the
+PC attribute table which keeps a stream ID for each PC signature.  More
 specifically, when a new write request comes, a designated SSD stream ID is
-obtained by referring to the PC-stream table using request's PC value as an
+obtained by referring to the PC attribute table using request's PC value as an
 index.  If there is no such a PC in the table, or a PC does not have a
-designated stream ID, the request gets legacy stream ID, which is 0.
+designated stream ID, the request gets default stream ID, which is set to 0.
 
 For adapting to changing workloads, re-clustering operations should be
 performed regularly. This re-clustering process can be done in a
-straightforward manner. The PC-stream cluster scans up-to-date lifetimes for
-all PCs in the PC-stream table. Note that PC's lifetimes are updated whenever
-the PC-lifetime managers gets new ones while handling write and TRIM requests,
-as explained in Section 5.1.  Then, using scanned information, the PC-stream
-cluster recomputes stream IDs and updates stream fields of the PC-stream table.
-Scanning and recomputing require lots of CPU cycles.  To avoid significant
-overhead, re-clustering is triggered when 10\% of the items in the PC-stream
-table have been changed.
+straightforward manner. The PC2Stream mapper scans up-to-date lifetimes for
+all PCs in the PC attribute table. Note that PC's lifetimes are updated whenever
+the lifetime manager gets new lifetimes while handling overwrites or TRIM requests,
+as explained in Section 5.1.  With the scanned information, the PC2Stream mapper
+recomputes stream IDs and updates stream fields of the PC attribute table.
+In order to minimize unnecessary overhead of frequent re-clustering operations, 
+re-clustering is triggered when 10\% of the PC lifetime entries in the PC attribute
+table is changed.
 
 
-
-\begin{figure}[t]
-\centering
-	\includegraphics[width=0.8\linewidth]{figure/jvmpc}
-	\caption{
-	Extracting PCs for JVM
-	}
-\label{fig:java}
-\end{figure}
-
-
-\subsection{PC Extraction for Indirect Writes}
-One limitation of using PCs to extract I/O characteristics is that it only
-works with C/C++ programs that \textit{directly} call write-related system
-calls.  Many programs, however, often invoke write system calls
-\textit{indirectly} through intermediate layers, which makes it difficult to
-track program contexts.
-
-The most representative example may be Java programs, such as Cassandra and
-Hadoop, that run inside a Java Virtual Machine (JVM). Java programs invoke
-write system calls via a native library written in C, so the PC extractor fails
-to capture I/O activities because it is unable to inspect the stack of Java
-processes.  Another example is a program that maintains a write buffer that is
-dedicated to dealing with all the writes from other code. For example, in
-MySQL~\cite{MySQL} and PostgreSQL~\cite{PostgreSQL}, every write is first
-destined for a write buffer, and then flush threads materialize buffered data
-to persistent storage.  In that case, the PC extractor only captures PCs of
-flush threads since code that actually issues I/Os runs in other threads with
-different stacks.
-
-The problem of indirect writes can be addressed by collecting PC signatures at
-the front-end interface of an intermediate layer that accepts write requests
-from other parts of the program. In case of Java programs, a native library can
-be modified to capture write requests and computes PC signatures. Once a native
-library is modified, it automatically gathers PC signatures without modifying
-application code. Fig.~\ref{fig:java} illustrates how \textsf{PCStream}
-collects signatures from Java programs.  We have modified the JVM using
-OpenJDK~\cite{OpenJDK} to extract PC signatures for most of write methods in
-write related classes, such as \texttt{OutputStream}.  The stack area in the
-\texttt{Runtime Data Areas} of JVM used to calculate PC signatures.  The
-calculated PC is then passed to the write system call of the kernel via the
-modified native I/O libraries.
-
-Unlike Java, there is no a straightforward way to collect PCs from applications
-with write buffers. This is because the implementation of write buffering is
-different depending on applications. Thus, additional efforts to manually
-modify code are unavoidable. However, the scope of this manual modification is
-only limited to a write buffering code, and application logics themselves don't
-need to be edited or annotated.
 
 \subsection{Internal Stream Management}
 While \textsf{PCStream} generally works well, it has two serious limitations;
@@ -292,5 +249,53 @@ is supported by multi-streamed SSD by default) is sufficient.
 %Since the
 %number of PCs created by applications is not limited, the clustering algorithm
 %must be efficient enough to quickly handle many PCs. 
+
+\begin{figure}[t]
+\centering
+	\includegraphics[width=0.9\linewidth]{figure/jvmpc}
+	\caption{Extracting PCs for JVM.}
+\label{fig:java}
+	\vspace{-20pt}
+\end{figure}
+
+
+\subsection{PC Extraction for Indirect Writes}
+One limitation of using PCs to extract I/O characteristics is that it only
+works with C/C++ programs that \textit{directly} call write-related system
+calls.  Many programs, however, often invoke write system calls
+\textit{indirectly} through intermediate layers, which makes it difficult to
+track program contexts.
+
+The most representative example may be Java programs, such as Cassandra and
+Hadoop, that run inside a Java Virtual Machine (JVM). Java programs invoke
+write system calls via a native library written in C, so the PC extractor fails
+to capture I/O activities because it is unable to inspect the stack of Java
+processes.  Another example is a program that maintains a write buffer that is
+dedicated to dealing with all the writes from other code. For example, in
+MySQL~\cite{MySQL} and PostgreSQL~\cite{PostgreSQL}, every write is first
+destined for a write buffer, and then flush threads materialize buffered data
+to persistent storage.  In that case, the PC extractor only captures PCs of
+flush threads since code that actually issues I/Os runs in other threads with
+different stacks.
+
+The problem of indirect writes can be addressed by collecting PC signatures at
+the front-end interface of an intermediate layer that accepts write requests
+from other parts of the program. In case of Java programs, a native library can
+be modified to capture write requests and computes PC signatures. Once a native
+library is modified, it automatically gathers PC signatures without modifying
+application code. Fig.~\ref{fig:java} illustrates how \textsf{PCStream}
+collects signatures from Java programs.  We have modified the JVM using
+OpenJDK~\cite{OpenJDK} to extract PC signatures for most of write methods in
+write related classes, such as \texttt{OutputStream}.  The stack area in the
+\texttt{Runtime Data Areas} of JVM used to calculate PC signatures.  The
+calculated PC is then passed to the write system call of the kernel via the
+modified native I/O libraries.
+
+Unlike Java, there is no a straightforward way to collect PCs from applications
+with write buffers. This is because the implementation of write buffering is
+different depending on applications. Thus, additional efforts to manually
+modify code are unavoidable. However, the scope of this manual modification is
+only limited to a write buffering code, and application logics themselves don't
+need to be edited or annotated.
 
 
