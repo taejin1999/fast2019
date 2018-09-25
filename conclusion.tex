@@ -1,20 +1,25 @@
 \section{Conclusions}
 
-We have presented a new stream management technique, \textsf{\small PCStream}, 
-for multi-streamed SSDs.  
-Unlike existing stream management techniques, \textsf{\small PCStream} fully automates 
-the process of mapping data to a stream based on PCs, 
-which work well for append-only workloads as well as update workloads.  
-By exploiting an observation that most PCs are distinguishable from each other 
-in their lifetime characteristics, \textsf{\small PCStream} allocates 
-each PC to a different stream.  
-When a PC has a large variance in their lifetimes, 
-\textsf{\small PCStream} refines its stream allocation 
-during garbage collection and moves the long-lived data of 
-the current stream to the corresponding internal stream.
-Our experimental results show that \textsf{\small PCStream} can reduce 
-the average WAF by up to 69\% over the existing automatic technique.
+We have presented a new stream management technique, \textsf{\small PCStream},
+for multi-streamed SSDs.  Unlike existing stream management techniques,
+\textsf{\small PCStream} fully automates the process of mapping data to a
+stream based on PCs, which work well for append-only workloads as well as
+in-place update workloads.  By exploiting an observation that most PCs are
+distinguishable from each other in their lifetime characteristics,
+\textsf{\small PCStream} allocates each PC to a different stream.  When a PC
+has a large variance in their lifetimes, \textsf{\small PCStream} refines its
+stream allocation during garbage collection and moves the long-lived data of
+the current stream to the corresponding internal stream.  Our experimental
+results show that \textsf{\small PCStream} can reduce the average WAF by up to
+69\% over the existing automatic technique.
 
-The current version of \textsf{\small PCStream} can be extended in several directions.  
-For example, we plan to support applications with other types of indirect writes.
-
+The current version of \textsf{\small PCStream} can be extended in several
+directions.  First, the current version of PCStream does not support
+applications with a write buffer ({\it e.g.,} MySQL). To address this, we plan
+to extend PCStream interfaces so that application developers can easily
+incorporate PCStream into their write buffering modules with minimal efforts.
+Second, we have only considered \texttt{write()}-related systems calls to
+collect PCs, but many applications ({\it e.g.} MongoDB) heavily use another
+interface to access files, \texttt{mmap()}. In the future, we plan to extend
+PCStream to support \texttt{mmap()} and evaluate its effectiveness using
+various applications.
