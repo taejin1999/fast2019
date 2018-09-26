@@ -1,16 +1,8 @@
 \vspace{-10pt}
-\section{Automatic I/O Activity Management Using Program Contexts}
+%\section{Automatic I/O Activity Management Using Program Contexts}
+\section{\note{Automatic I/O Activity Management}}
 \label{sec:programcontext}
 \vspace{-5pt}
-%In developing \textsf{\small PCStream}, our key insight was that in most
-%applications, (regardless of their I/O workload characteristics) a few dominant
-%I/O activities exist and each dominant I/O activity   represents the
-%application's important I/O context (e.g., for logging or for flushing).
-%Furthermore, most dominant I/O activities tend to have distinct data lifetime
-%patterns.  In order to distinguish data by their lifetimes, therefore, it is
-%important to effectively distinguish dominant I/O activities from each other.
-%For example, in update workloads, LBAs alone were effective in separating
-%dominant I/O activities.  
 \begin{figure}[t]
 %	\vspace{-10pt}
 	\centering
@@ -22,36 +14,22 @@
 \end{figure}
 
 In developing an efficient data lifetime separator for general I/O workloads,
-our key insight was that in most applications,
-the overall I/O behavior of 
-applications is decided by a few dominant
-I/O activities (e.g., logging and flushing in RocksDB). 
-Moreover, 
-data written by dominant I/O activities tend to have distinct lifetime patterns.
-Therefore, if such dominant I/O activities of applications can be 
-automatically detected and distinguished each other in an LBA-{\it oblivious} fashion, 
-an automatic stream management technique can be developed for widely varying I/O workloads 
-including append-only workloads.
-%(regardless of their I/O workload characteristics) a few dominant
-%I/O activities exist and each dominant I/O activity   represents the
-%application's important I/O context (e.g., for logging or for flushing).
-%Furthermore, most dominant I/O activities tend to have distinct data lifetime
-%patterns.  In order to distinguish data by their lifetimes, therefore, it is
-%important to effectively distinguish dominant I/O activities from each other.
-%For example, in update workloads, LBAs alone were effective in separating
-%dominant I/O activities.  
+our key insight was that in most applications, the overall I/O behavior of
+applications is decided by a few dominant I/O activities ({\it e.g.}, logging and
+flushing in RocksDB).  Moreover, data written by dominant I/O activities tend
+to have distinct lifetime patterns.  Therefore, if such dominant I/O activities
+of applications can be automatically detected and distinguished each other in
+an LBA-{\it oblivious} fashion, an automatic stream management technique can be
+developed for widely varying I/O workloads including append-only workloads.
 
-In this paper, we argue that a program context can be
-used to build an efficient general-purpose 
-classifier of dominant I/O activities with different data lifetimes.
-Here, a PC
-represents an execution path of an application which invokes write-related
-system call functions such as {\tt write()} and {\tt writev()}.  
-There could be various ways of extracting PCs, 
-but the most common approach~\cite{PC, PC2} is to
-represent each PC with its PC signature which is computed by summing 
-program counter values of all the functions along the execution path which
-leads to a write system call.
+In this paper, we argue that a program context can be used to build an
+efficient general-purpose classifier of dominant I/O activities with different
+data lifetimes.  Here, a PC represents an execution path of an application
+which invokes write-related system call functions such as {\tt write()} and
+{\tt writev()}.  There could be various ways of extracting PCs, but the most
+common approach~\cite{PC, PC2} is to represent each PC with its PC signature
+which is computed by summing program counter values of all the functions along
+the execution path which leads to a write system call.
 
 %we represent the PC by summing program counter values of
 %all the functions along the execution path which leads to a write system call.
@@ -81,43 +59,38 @@ leads to a write system call.
 \vspace{-15pt}
 \end{figure*}
 
-\vspace{-15pt}
-\subsection{Program Context as a Unit of Lifetime Classification}
+\vspace{-10pt}
+%\subsection{Program Context as a Unit of Lifetime Classification}
+\subsection{\note{PC as a Unit of Lifetime Classification}}
 \vspace{-5pt}
 In order to illustrate that using PCs is an effective way to distinguish I/O
-activities of an application and their data lifetime patterns, 
-we measured data lifetime distributions of PCs from various applications with 
-different I/O workloads.  
-In this section, we report our evaluation results for three applications with distinct I/O
-activities: RocksDB~\cite{RocksDB}, SQLite~\cite{SQLite}, and GCC~\cite{GCC}.
-RocksDB shows the append-only workload while SQLite shows a workload 
-that updates in place.
-Both database workloads are expected to have distinct I/O activities 
-for writing log files and data files.
-GCC represents 
-an extensive compiler workload (e.g., compilng a Linux kernel) that generates 
-many short-lived temporary files (e.g., .s, .d, and .rc files) 
-as well as some long-lived files (e.g., object files and kernel image files).
+activities of an application and their data lifetime patterns, we measured data
+lifetime distributions of PCs from various applications with different I/O
+workloads.  In this section, we report our evaluation results for three
+applications with distinct I/O activities: RocksDB~\cite{RocksDB},
+SQLite~\cite{SQLite}, and GCC~\cite{GCC}.  RocksDB shows the append-only
+workload while SQLite shows a workload that updates in place.  Both database
+workloads are expected to have distinct I/O activities for writing log files
+and data files.  GCC represents an extensive compiler workload ({\it e.g.},
+compiling a Linux kernel) that generates many short-lived temporary files ({\it
+e.g.}, \texttt{.s}, \texttt{.d}, and \texttt{.rc} files) as well as some
+long-lived files ({\it e.g.}, object files and kernel image files).
 
 In RocksDB, dominant I/O activities include logging, flushing and compaction.
-Since these I/O activities are invoked through different 
-function-call paths, we can easily
-identify dominant I/O activities of RocksDB using PCs.  
-For example, Fig.~\ref{fig:iopath} shows 
-(simplified) execution paths for 
-logging and compaction in RocksDB.  
-The sum of program counter values of the execution path 
-\texttt{WriteImpl()}$\rightarrow$\texttt{WriteToWAL()}$\rightarrow$ \texttt{AddRecord()} is used
-to represent a PC for the logging activity while that of the execution path
-\texttt{Run()}$\rightarrow$ \texttt{ProcessKeyValueCompaction()} $\rightarrow$ \texttt{FinishCompactionFile()} 
-is used for the compaction activity.
-
-In SQLite, there exist two dominant I/O activities which are logging and managing 
-database tables.
-Similar to the RocksDB, SQLite writes log files and database files using different
-execution paths.
-In GCC, there exist many dominant I/O activities of creating various types of 
-temporal files and object files.
+Since these I/O activities are invoked through different function-call paths,
+we can easily identify dominant I/O activities of RocksDB using PCs.  For
+example, Fig.~\ref{fig:iopath} shows (simplified) execution paths for logging
+and compaction in RocksDB.  The sum of program counter values of the execution
+path \texttt{WriteImpl()}$\rightarrow$\texttt{WriteToWAL()}$\rightarrow$
+\texttt{AddRecord()} is used to represent a PC for the logging activity while
+that of the execution path \texttt{Run()}$\rightarrow$
+\texttt{ProcessKeyValueCompaction()} $\rightarrow$
+\texttt{FinishCompactionFile()} is used for the compaction activity.
+In SQLite, there exist two dominant I/O activities which are logging and
+managing database tables.  Similar to the RocksDB, SQLite writes log files and
+database files using different execution paths.  In GCC, there exist many
+dominant I/O activities of creating various types of temporal files and object
+files.
 
 %\textcolor{red}{(TODO: 갑자기
 %lifetime 이야기가 나옴. 없애도 큰 문제가 없을 듯...) \sout{Note that using a
@@ -127,65 +100,60 @@ temporal files and object files.
 %workloads nor for modern multi-streamed SSDs.}}
 
 To confirm our hypothesis that data lifetimes can be distinguished by tracking
-dominant I/O activities and a PC is a useful unit of classification for 
-different I/O activities,
-we have analyzed how well PCs work for RocksDB, SQLite and GCC.
-Fig.~\ref{fig:types_and_PCs} shows data lifetime distributions of 
-dominant I/O activities which were distinguished by computed PC values.
-As expected, Fig.~\ref{fig:types_and_PCs} validates that dominant I/O activities 
-show distinct data lifetime distributions over the logical address space.
-For example, as shown in Figs.~\ref{fig:types_and_PCs}(a)$\sim$\ref{fig:types_and_PCs}(c), 
-the logging activity, the flushing activity and the compaction activity 
-in RocksDB clearly exhibit quite different data lifetime distributions.
-While the logged data written by the logging activity have short lifetimes, 
-the flushed data by the flushing activity have little bit longer lifetimes.  
-Similarly, for SQLite and GCC, dominant I/O
-activities show quite distinct data lifetime characteristics as shown in 
-Figs.~\ref{fig:types_and_PCs}(d)$\sim$\ref{fig:types_and_PCs}(g).
-As shown in Figs.~\ref{fig:types_and_PCs}(d), the logging activity of
-SQLite generates short-lived data.  This is because SQLite overwrites logging
-data in a small and fixed storage space and then removes them soon. 
-Similarly,
-data lifetimes of temporary files generated by GCC are 
-relatively short as shown in Fig.~\ref{fig:types_and_PCs}(f),
-because of the write-once pattern of temporary files.
-However, unlike the other graphs in Fig.~\ref{fig:types_and_PCs}, data lifetime
-distributions of Figs.~\ref{fig:types_and_PCs}(c) and \ref{fig:types_and_PCs}(e),
-which correspond to the compaction activity of RocksDB and the updating activity of
-SQLite, respectively, show large lifetime variances.
-These {\it outlier I/O activities} need a special treatment, which 
+dominant I/O activities and a PC is a useful unit of classification for
+different I/O activities, we have analyzed how well PCs work for RocksDB,
+SQLite and GCC.  Fig.~\ref{fig:types_and_PCs} shows data lifetime distributions
+of dominant I/O activities which were distinguished by computed PC values.  As
+expected, Fig.~\ref{fig:types_and_PCs} validates that dominant I/O activities
+show distinct data lifetime distributions over the logical address space.  For
+example, as shown in
+Figs.~\ref{fig:types_and_PCs}(a)$\sim$\ref{fig:types_and_PCs}(c), the logging
+activity, the flushing activity and the compaction activity in RocksDB clearly
+exhibit quite different data lifetime distributions.  While the logged data
+written by the logging activity have short lifetimes, the flushed data by the
+flushing activity have little bit longer lifetimes.  Similarly, for SQLite and
+GCC, dominant I/O activities show quite distinct data lifetime characteristics
+as shown in Figs.~\ref{fig:types_and_PCs}(d)$\sim$\ref{fig:types_and_PCs}(e).
+As shown in Figs.~\ref{fig:types_and_PCs}(d), the logging activity of SQLite
+generates short-lived data.  This is because SQLite overwrites logging data in
+a small and fixed storage space and then removes them soon.  Lifetimes of
+temporary files generated by GCC are relatively short as shown in
+Fig.~\ref{fig:types_and_PCs}(f), because of the write-once pattern of temporary
+files.  But, unlike the other graphs in Fig.~\ref{fig:types_and_PCs}, data
+lifetime distributions of Figs.~\ref{fig:types_and_PCs}(c) and
+\ref{fig:types_and_PCs}(e), which correspond to the compaction activity of
+RocksDB and the updating activity of SQLite, respectively, show large
+variances.  These {\it outlier I/O activities} need a special treatment, which
 will be described in Section 4.
 
-Note that if we used an LBA-based data separator instead of the proposed PC-based scheme, 
-most of data lifetime characteristics shown in Fig.~\ref{fig:types_and_PCs} could 
-not have been known.  Only the data lifetime
-distribution of the logging activity of SQLite, as shown in Fig.~\ref{fig:types_and_PCs}(d), 
-can be accurately captured by the LBA-based data separator.  
-For example, the LBA-based data separtor cannot 
-decide that the data lifetime of data produced from the outputting temp activity of GCC 
-is short because temporary files are not written at the same LBA
-each time they are generated during the compiling step. 
+Note that if we used an LBA-based data separator instead of the proposed
+PC-based scheme, most of data lifetime characteristics shown in
+Fig.~\ref{fig:types_and_PCs} could not have been known.  Only the data lifetime
+distribution of the logging activity of SQLite, as shown in
+Fig.~\ref{fig:types_and_PCs}(d), can be accurately captured by the LBA-based
+data separator.  For example, the LBA-based data separtor cannot decide that
+the data lifetime of data produced from the outputting temp activity of GCC is
+short because temporary files are not written at the same LBA each time they
+are generated during the compiling step. 
 
 
 \vspace{-10pt}
 \subsection{Extracting PCs}
 \vspace{-5pt}
-A PC signature, which is used as a unique ID of each program context,
-is defined
-to be the sum of program counters along the execution path of function calls
-that finally reaches a write-related system function.  In theory, program
-counter values in the execution path can be extracted in a relatively
-straightforward manner.  Except for inline functions, every function call
-involves pushing the address of the next instruction of a caller as a return
-address to the stack, followed by pushing a frame pointer value.  By referring
-to frame pointers, we can back-track stack frames of a process and
-selectively get return addresses for generating a PC signature.
-For example, Fig.~\ref{fig:getpc}(a) illustrates a stack of RocksDB corresponding
-to Fig.~\ref{fig:iopath}, where return addresses are pushed before calling
-the \textsf{\small  write()}, \textsf{\small AddRecord()} and \textsf{\small
-WriteToWAL()} functions.  Since frame pointer values in the stack hold the
-addresses of previous frame pointers, we can obtain return addresses and
-accumulate them to compute a PC signature.  
+As mentioned earlier, a PC signature, which is used as a unique ID of each
+program context, is defined to be the sum of program counters along the
+execution path of function calls that finally reaches a write-related system
+function.  In theory, program counter values in the execution path can be
+extracted in a relatively straightforward manner.  Except for inline functions,
+every function call involves pushing the address of the next instruction of a
+caller as a return address to the stack, followed by pushing a frame pointer
+value.  By referring to frame pointers, we can back-track stack frames of a
+process and selectively get return addresses for generating a PC signature.
+Fig.~\ref{fig:getpc}(a) illustrates a stack of RocksDB corresponding to
+Fig.~\ref{fig:iopath}, where return addresses are pushed before calling
+\texttt{write()}, \texttt{AddRecord()} and \texttt{WriteToWAL()}.  Since frame
+pointer values in the stack hold the addresses of previous frame pointers, we
+can obtain return addresses and accumulate them to compute a PC signature.  
 
 %For example,
 %Fig.~\ref{fig:getpc}(a) shows abstracted execution paths of log data and
@@ -199,7 +167,7 @@ accumulate them to compute a PC signature.
 The frame pointer-based approach for computing a PC signature, however, is not
 always possible because modern C/C++ compilers often do not use a frame pointer
 for improving the efficiency of register allocation.  One example is a {\tt
--fomit-frame-pointer} option of gcc~\cite{GCC}.  This option enables to use a frame
+-fomit-frame-pointer} option of GCC~\cite{GCC}.  This option enables to use a frame
 pointer as a general-purpose register for performance, but makes it difficult for us
 to back-track return addresses along the call chains.  
 
@@ -231,9 +199,9 @@ In the current implementation, the scanning process stops early once
 five return address candidates are identified.  
 Even though it is quite ad-hoc, this restricted scan is quite effective
 in distinguishing different PCs because it is very unlikely that two different PCs
-reach the same write() system call through the same execution subpath 
+reach the same \texttt{write()} system call through the same execution subpath 
 that covers five proceeding function calls. 
 In our evaluation on a PC with 3.4 GHz Intel CPU, the overhead of the
 restricted scan was almost negligible, taking only 300$\sim$400 $n$sec per
-\textsf{\small write()} system call.
+\texttt{write()} system call.
 

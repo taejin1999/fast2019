@@ -9,9 +9,9 @@ different types of data~\cite{MultiStream}.  Yang {\it et al.} showed that a
 multi-streamed SSD was effective for separating data of append-only
 applications like RocksDB~\cite{Level}.  Yong {\it et al.} presented a virtual
 stream management technique that allows logical streams, not physical streams,
-to be allocated by applications.
-Unlike these studies that involve modifying the source code of target programs, 
-\textsf{\small PCStream} automates the stream allocation with no manual code modification.
+to be allocated by applications.  Unlike these studies that involve modifying
+the source code of target programs, \textsf{\small PCStream} automates the
+stream allocation with no manual code modification.
 
 \begin{comment}
 Rho {\it et al.} proposed a stream management technique, called FStream, at the
@@ -26,20 +26,22 @@ programs' I/O behaviors using PCs with no file system-specific modifications.
 \end{comment}
 
 Yang {\it et al.} presented an automatic stream management technique at the
-block device layer~\cite{AutoStream}. Similar to hot-cold data separation technique used in FTLs,
-it approximates the data lifetime of data based on update frequencies of LBAs.
-The applicability of this technique is, however, quite limited to in-place update workloads only.  
-\textsf{\small PCStream} has no such limitation on the workload characteristics, thus effectively working for general
-I/O workloads including append-only workloads, write-once workloads as well as in-place update workloads.
+block device layer~\cite{AutoStream}. Similar to hot-cold data separation
+technique used in FTLs, it approximates the data lifetime of data based on
+update frequencies of LBAs.  The applicability of this technique is, however,
+quite limited to in-place update workloads only.  \textsf{\small PCStream} has
+no such limitation on the workload characteristics, thus effectively working
+for general I/O workloads including append-only, write-once 
+as well as in-place update workloads.
 
 Ha {\it et al.} proposed an idea of using PCs to separate hot data from cold
 one in an FTL layer~\cite{PCHa}.  Kim {\it et al.} extended it for
-multi-streamed SSDs~\cite{PCStream}.  
-Unlike these work, our study treats the PC-based stream management problem in a more complete fashion by 
-showing 1) pinpointing the key weaknesses of existing multi-streamed SSD solutions, 
-2) extending the effectiveness of PCs for more general I/O workloads 
-including write-once patterns, and 3)
-introducing internal streams as an effective solution for outlier PCs.  
-Furthermore, \textsf{\small PCStream} exploits the globally unique nature of a PC signature 
-for supporting short-lived applications.
+multi-streamed SSDs~\cite{PCStream}.  Unlike these work, our study treats the
+PC-based stream management problem in a more complete fashion by showing (1)
+pinpointing the key weaknesses of existing multi-streamed SSD solutions, (2)
+extending the effectiveness of PCs for more general I/O workloads including
+write-once patterns, and (3) introducing internal streams as an effective
+solution for outlier PCs.  Furthermore, \textsf{\small PCStream} exploits the
+globally unique nature of a PC signature for supporting short-lived
+applications.
 
