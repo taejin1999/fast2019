@@ -1,115 +1,125 @@
+\vspace{-10pt}
 \section{Experimental Results}
-
-\textcolor{red}{(TODO: performance results are not included in section 6. we
-should add some numbers such as runtime, throughput, cdf of latency, and SW
-overhead)}
-
-We have implemented \textsf{PCStream} on the Linux kernel 4.5 that runs on
-Intel's i7-2600 CPUs with 8 cores and with 16~GB DRAM.  Samsung's PM963 480~GB
-SSD with a multi-stream feature is used.  PM963 supports up to 9 streams; 8
-user-configurable streams and one default stream. Write requests that do not
-specify their stream IDs are assigned the default stream.  To support the
-internal stream, we have modified the SSD firmware.  For detailed performance
-analysis, an \texttt{nvme-cli} tool is modified to retrieve the information of
-\textsf{PCStream}-enabled device internals, such as the WAF or
-\textcolor{red}{the valid time of data in every blocks}.
-
+\vspace{-5pt}
+\subsection{Experimental Settings}
+\vspace{-5pt}
+In order to evaluate the effectiveness of \textsf{\small PCStream},
+e have implemented  \textsf{\small PCStream} in the Linux kernel (version 4.5) 
+on a PC host with Intel Core i7-2600 8-core processor and 16-GB DRAM.  
+As a multi-streamed SSD, we used Samsung's PM963 480-GB SSDs.
+The PM963 SSD supports up to 9 streams; 8
+user-configurable streams and 1 default stream. 
+When no stream is specified with a write request, the default stream is used.
+In order to support internal streams, we have modified the existing PM963 FTL firmware.  
+For a detailed performance analysis, we built a modified {\tt nvme-cli} tool that can 
+retrieve the internal profiling data from PCStream-enabled SSDs.  
+We used the modified {\tt nvme-cli} to compute WAF values from PM963 and 
+measure the lifetime of data in each block. 
 %and its firmware has been modified to
 %support the internal stream.
 
-For an objective evaluation, we compared \textsf{\small PCStream} with three
+We compared \textsf{\small PCStream} with three
 existing schemes: \textsf{\small Baseline}, \textsf{\small
 ManualStream}~\cite{MultiStream}, and \textsf{\small
-AutoStream}~\cite{AutoStream}.  \textsf{\small Baseline} stands for a legacy
+AutoStream}~\cite{AutoStream}.  \textsf{\small Baseline} indicates a legacy
 SSD that does not support multiple streams. \textsf{\small ManualStream}
 represents multi-streamed SSDs with manual stream allocation.  \textsf{\small
-AutoStream} is one that employs an LBA-based data separation technique which is
-implemented at the device driver layer. 
+AutoStream} represents the LBA-baed stream management technique proposed
+in ~\cite{AutoStream}. 
 
-We have carried out experiments with various benchmark programs, including
-RocksDB~\cite{RocksDB}, Cassandra~\cite{Cassandra}, 
-SQLite~\cite{SQLite}, and GCC~\cite{GCC}, each of
-which generates distinct write patterns.  RocksDB and Cassandra have
-append-only write patterns; SQLite has in-place update write patterns; GCC has
-write-once patterns.  We also run the combinations of multiple programs
-simultaneously for assessments under more realistic environments.  Yahoo! Cloud
-Serving Benchmark (YCSB)~\cite{YCSB} with 120,000,000 keys runs on top of
-RocksDB and Cassandra.  Both RocksDB and Cassandra are based on the LSM-tree
-algorithm, so they have three major I/O activities (e.g.,
-\textcolor{red}{logging, flush, and compaction}) as analyzed in Section 3.
-%However, we identified about 5 PCs during runtime and we consider the extra
-%PCs as management use.
-TPC-C~\cite{TPCC} runs on SQLite with 20 warehouses.  Similarly, SQLite has two
-major I/O activities (e.g., \textcolor{red}{logging and updating DB tables}). 
-%2 kinds of data types in theory but we identified 4 PCs.
-GCC compiles kernel source code 30 times. For the each run, 1/3 of source files
-that are randomly chosen are modified and involved in the compilation.  GCC
-creates many temporary files (e.g., \textcolor{red}{.s, .d, and .rc}) as well as long-lived
-files (e.g., \textcolor{red}{.o}), thereby having more than 20 PCs.  To
-generate mixed workloads, we run RocksDB and GCC scenarios together (denoted by
+
+We have carried out experiments with various benchmark programs
+which represent distinct write characteristics.
+RocksDB~\cite{RocksDB} and Cassandra~\cite{Cassandra} have
+append-only write patterns. SQLite~\cite{SQLite} has in-place update write patterns
+and GCC~\cite{GCC} has write-once patterns.  
+For more realistic evaluations, we also used mixed workloads running two 
+different benchmark programs simultaneously.
+
+In both RocksDB and Cassandra experiments, Yahoo! Cloud
+Serving Benchmark (YCSB)~\cite{YCSB} with 12-million keys was used to
+generate update heavy workload (workload type A) which has a mix of 50/50 reads and writes.
+
+As explained in Section 3, since both RocksDB and Cassandra are based on the
+append-only LSM-tree algorithm~\cite{LSM}, they have three dominant I/O 
+activities (such as logging, flushing, and compaction).
+Since Cassandra is written in Java, its PC is extracted by the procedure
+described in Section 5.4.
+In SQLite evaluations, TPC-C~\cite{TPCC} was used with 20 warehouses.  
+SQLite has two dominant I/O activities such as logging and updating tables. 
+In GCC experiments, a Linux kernel was built 30 times.
+For each build, 1/3 of source files, which were selected randomly,
+were modified and recompiled.  
+Since GCC creates many temporary files (e.g., .s, .d, and .rc) 
+as well as long-lived files (e.g., .o) from different compiler tools
+there are more than 20 dominant PCs.  
+To generate mixed workloads, we run RocksDB and GCC scenarios together (denoted by
 Mixed 1), and run SQLite and GCC scenarios at the same time (denoted by Mixed
 2).
-%Since GCC writes many kinds of temporary files as well as long-lived files,
-%GCC has more than 20 PCs which makes clustering process effective for the GCC
-%and mixed workloads.
-To emulate an aged SSD, 90\% of the total SSD capacity was initially filled up
+In order to emulate an aged SSD in our experiments,
+90\% of the total SSD capacity was initially filled up
 with user files before benchmarks run.
 
+\vspace{-10pt}
 \subsection{Performance Evaluation}
+\vspace{-5pt}
+
 \begin{figure}[t]
 	\centering
 	\includegraphics[width=0.9\linewidth]{figure/iops}
-	\caption{The normalized IOPS comparison for various workloads.}
+	\caption{A comparison of normalized IOPS under different schemes.}
+	\vspace{-15pt}
 	\label{fig:iops}
-	\vspace{-20pt}
+	\vspace{-5pt}
 \end{figure}
 
-We compared IOPS of the existing techniques with \textsf{\small PCStream} for various 
-workloads.
-For RocksDB and Cassandra, YCSB benchmark showed total IOPS.
-For SQLite, TPC-C benchmark evaluate result IOPS.
-For GCC and mixed workloads, however, we can not get IOPS so
-we measured the number of write requests at the block
-device layer and compute the IOPS by dividing it by the elapsed time.
-Fig.~\ref{fig:iops} shows the IOPS normalized to the \textsf{\small Baseline}.
-By effectively managing streams of a multi-streamed SSD based on PCs,
-\textsf{\small PCStream} increased IOPS by 45\% and 28\% on average over
+We compared IOPS values of three existing techniques with \textsf{\small PCStream}.
+Fig.~\ref{fig:iops} shows normalized IOPS for six benchmarks with four different
+techniques. All the measured IOPS values\footnote{
+For RocksDB, Cassandra, and SQLite, the YCSB benchmark and TPC-C benchmark
+compute IOPS values as a part of the benchmark report.
+For GCC and mixed workloads, which do not compute IOPS values,
+we computed the IOPS by dividing the total number of write requests (measured 
+at the block device layer) by the total elapsed time of running 
+compiling job and benchmark programs.
+}
+\textsf{\small PCStream} improved the average IOPS by 45\% and 28\% over 
 \textsf{\small Baseline} and \textsf{\small AutoStream}, respectively.
-Especially, \textsf{\small PCStream} outperformed over \textsf{\small AutoStream}
-by up to 56\% for complex workloads where the number of PCs are larger than 
-the SSD can support such as GCC, Mixed 1 and Mixed 2.
-This high performance improvement came from WAF reduction and the 
-detailed analysis concerned with WAF will be presented in the following subsections.
+\textsf{\small PCStream} outperformed over \textsf{\small AutoStream}
+by up to 56\% for complex workloads (i.e., GCC, Mixed1 and Mixed 2) where
+the number of extracted PCs far exceeds the number of supported streams
+in PM963. The high efficiency of \textsf{\small PCStream} under complex
+workloads comes from two novel features of \textsf{\small PCStream}: (1) LBA-oblivious 
+PC-centric data separation and (2) a large number of streams supported 
+using internal streams. \textsf{\small AutoStream}, on the other hands,
+works quite poorly except for SQLite where the LBA-based data separation
+technique can be effective.
+Even in SQLite, \textsf{\small PCStream} outperforms \textsf{\small AutoStream}
+by 10\%.
 
+\vspace{-10pt}
 \subsection{WAF Comparison}
+\vspace{-5pt}
 
-\begin{figure}[t]
-	\centering
-	\includegraphics[width=0.9\linewidth]{figure/waf}
-	\caption{The WAF comparison for various workloads.}
-	\label{fig:waf}
-	\vspace{-10pt}
-\end{figure}
-
-We compared WAF of the existing techniques with \textsf{\small PCStream} for various
-workloads, and the result is shown in Fig.~\ref{fig:waf}.  Overall,
-\textsf{\small PCStream} was as efficient as \textsf{\small Manual}; Across all the
+Fig.~\ref{fig:waf} shows WAF values of four techniques for six benchmarks.
+Overall, \textsf{\small PCStream} was as efficient as \textsf{\small ManualStream}; 
+Across all the
 benchmarks, \textsf{\small PCStream} showed quite similar WAF values as
-\textsf{\small Manual}. \textsf{\small PCStream} reduced WAF values by 63\% and 49\% over
-\textsf{\small Baseline} and \textsf{\small AutoStream}, respectively, on average.  The
-result shows that separating short-lived data (e.g., log or temp files) from
-long-lived one (e.g., compaction or result files) using PC was quite effective.
+\textsf{\small ManualStream}. \textsf{\small PCStream} reduced the average WAF value
+by 63\% and 49\% over
+\textsf{\small Baseline} and \textsf{\small AutoStream}, respectively.  
+%The result shows that separating short-lived data (e.g., log or temp files) from
+%long-lived one (e.g., compaction or result files) using PC was quite effective.
 
 As expected, \textsf{\small Baseline} showed the worst performance among all the
-techniques.  We also observed that \textsf{\small AutoStream} was not able to achieve high WAF
-reduction.  This was because the lack of relationship between hotness of data
-and LBAs. Except for SQLite, all other benchmarks wrote data in an append-only
-and/or a write-only manner. Since \textsf{\small PCStream} and \textsf{\small Manual} did not
-depend upon LBAs for hot-cold separation, they performed well consistently,
+techniques. Because of the intrinsic limitation of LBA-based data separation
+techniques for modern workloads,\textsf{\small AutoStream} performs quite poorly
+except for SQLite.
+Since \textsf{\small PCStream} (and \textsf{\small ManualStream}) did not
+depend upon LBAs for stream separations, they performed well consistently,
 regardless of write access patterns.
 As a result, \textsf{\small PCStream} reduced WAF by up to 69\% over 
 \textsf{\small AutoStream}.
-
 
 %Only SQLite had in-place update patterns for log files, 
 %but the larger amount of data were written to database files 
@@ -118,18 +128,28 @@ As a result, \textsf{\small PCStream} reduced WAF by up to 69\% over
 %however, long-lived data in database files are moved to internal streams during
 %GC so that we can further reduce WAF.
 
-One of the noticeable observations in Fig.~\ref{fig:waf} was that PCStream
-performed even better than Manual for GCC, Mixed 1, and Mixed 2.  Those
-benchmarks created many streams larger than ones supported by PM963.  In
-\textsf{Manual}, application code was manually annotated at offline, so that
-write I/Os from specific routines were assigned to designated SSD stream IDs.
-Hence, it is impossible to know which applications run simultaneously, how many
-streams would be created by them, and how to map those streams to SSD streams
-in an optimal manner. Consequently, assigned stream IDs cannot be changed or
-adjusted at run time adapting to the characteristics of programs running.
-Unlike \textsf{Manual}, \textsf{PCStream} collected all PCs at run time,
-clustered, and assigned them to SSD stream IDs, thereby outperforming
-\textsf{Manual}.
+One interesting observations in Fig.~\ref{fig:waf} is that \textsf{\small PCStream}
+achieved a lower WAF value than even \textsf{\small ManualStream} for GCC, 
+Mixed 1, and Mixed 2 where more than the maximum number of streams in PM963
+are needed.
+In \textsf{ManualStream}, DB applications and GCC were manually annotated at offline, 
+so that write system calls were statically bound to specific streams during
+compile time.
+When multiple programs run together as in three complex workloads 
+(i.e., GCC, Mixed 1 and Mixed 2), static stream allocations are difficult to work 
+efficiently because they cannot adjust to dynamically changing execution environments. 
+However, unlike \textsf{\small ManualStream}, \textsf{\small PCStream} continuously adapts its 
+stream allocations during run time, thus quickly responding to varying execution
+environments.
+
+\begin{figure}[t]
+	\centering
+	\includegraphics[width=0.9\linewidth]{figure/waf}
+	\caption{A comparison of WAF under different schemes.}
+	\label{fig:waf}
+	\vspace{-5pt}
+\end{figure}
+
 
 %since the Manual scheme has static stream allocation.
 %In Manual, once data types is mapped to the stream, the mapping is not changed 
@@ -143,114 +163,117 @@ clustered, and assigned them to SSD stream IDs, thereby outperforming
 %better stream mapping.
 %The detailed analysis will be shown in the following subsections.
 
-\begin{comment}
-For example, both \textsf{\small PCStream} and \textsf{\small Manual} reduced WAF by 38\% over \textsf{\small Baseline} for the \texttt{UR} case. 
-Compared with \textsf{\small AutoStream}, \textsf{\small PCStream} was more effective, reducing WAF more by 35\% on average.  
-\textsf{\small PCStream} outperformed \textsf{\small AutoStream} by reducing WAF by 35\% on average.
-Fig. 6 also indicates that the two-phase stream assignment technique is effective.  
-\textsf{\small PCStream} outperformed \textsf{\small PCStream$^{*}$} by 12\% on average in the WAF reduction.
-As shown in Fig. 6, \textsf{\small PCStream$^*$} reduced WAF by up to 30\% over \textsf{\small AutoStream}.  
-\end{comment}
-
 \subsection{Per-stream Lifetime Distribution Analysis}
 
 \begin{figure}[t]
 	\centering
 	\includegraphics[width=1\linewidth]{figure/distribution}
-	\caption{A Comparison of lifetime distributions of the smaller variance streams.}
+	\caption{A Comparison of per-stream lifetime distributions.}
 	\label{fig:distribution}
-	\vspace{-20pt}
+	\vspace{-10pt}
 \end{figure}
 
-To better understand the benefit of \textsf{\small PCStream} on WAF reduction,
-we measured per-stream lifetime distributions for the \texttt{Mixed 1}
+To better understand the benefit of \textsf{\small PCStream} on the WAF reduction,
+we measured per-stream lifetime distributions for the Mixed 1
 scenario.  Fig.~\ref{fig:distribution} shows a box plot of data lifetimes from
 the 25th to the 75th percentile.  As shown in Fig.~\ref{fig:distribution},
-streams in both \textsf{\small PCStream} and Manual are roughly categorized as
-two groups, $G1$ = $\{$1, 2, 3, 4, 5$\}$ and $G2$ = $\{$6, 7, 8$\}$, where $G1$
-includes streams with short lifetimes and small variances (i.e., streams 1, 2,
-3, 4, and 5) and $G2$ includes streams with large lifetimes and large variances
-(i.e., streams 6, 7, and 8). The stream 0 does not belong to any groups as it
+streams in both \textsf{\small PCStream} and \textsf{\small ManualStream} 
+are roughly categorized as
+two groups, $G1$ = $\{S_1$, $S_2$, $S_3$, $S_4$, $S_5\}$ and 
+$G2$ = $\{S_6$, $S_7$, $S_8\}$, where $G1$
+includes streams with short lifetimes and small variances 
+(i.e., $S_1$, $S_2$, $S_3$, $S_4$, and $S_5$) and 
+$G2$ includes streams with large lifetimes and large variances
+(i.e., $S_6$, $S_7$, and $S_8$). The $S_0$ does not belong to any groups as it
 is assigned to requests whose lifetimes are unknown.  Even though the variance
-in the stream 0 is wider than that in Manual, PCStream showed similar
-per-stream distributions as Manual. In particular, for the streams in $G2$,
-PCStream exhibited smaller variance than Manual, which means that PCStream
-separates cold data from hot data efficiently.
+in the $S_0$ is wider than that in \textsf{\small ManualStream}, 
+\textsf{\small PCStream} showed similar
+per-stream distributions as \textsf{\small ManualStream}. 
+In particular, for the streams in $G2$,
+\textsf{\small PCStream} exhibited smaller variance than \textsf{\small ManualStream}, 
+which means that \textsf{\small PCStream}
+separates cold data from hot data more efficiently.  
+Since \textsf{\small PCStream} moves long-lived data of a stream to its internal stream, 
+the variance of streams with large lifetimes tend to be smaller over \textsf{\small ManualStream}.
 
-AutoStream was not able to achieve small variance of data lifetimes in
-comparison with PCStream and Manual. At first, AutoStream assigns data to the
-stream 0 and then increases the stream number according to their update
-frequency. In Fig.~\ref{fig:distribution}, we found that short-lived data were
-generally allocated to higher streams.  However, high variance observed across
-all the streams indicates hot data are often mixed up with cold one.  This is
-an expected result. In RocksDB and GCC workloads, there is no strong relation
-between hotness of data and LBA.  Thus, long-lived data are often written to
-LBAs where short-live data were previously written to, and it results in very
-high lifetime variances for all the streams.
+\textsf{\small AutoStream} was not able to achieve small
+per-stream variances as shown in Fig.~\ref{fig:distribution}
+over \textsf{\small PCStream} and \textsf{\small ManualStream}. 
+As shown in Fig.~\ref{fig:distribution}, all the streams have large variances in 
+\textsf{\small AutoStream} because hot data are often mixed with cold data in the same stream.  
+Since the LBA-based data separation technique of \textsf{\small AutoStream}
+does not work well with both RocksDB and GCC, 
+all the streams include hot data as well as cold data, thus resulting in large lifetime variances. 
 
-\subsection{Impact of the Internal Stream}
+\subsection{Impact of Internal Streams}
 
-In order to understand the impact of the two-phase assignment, we compared each
-technique with and without the internal stream.  The internal stream works
-independently of a stream assignment method running at the host level, so it
-can easily be combined with any host-level techniques.  Fig.~\ref{fig:internal}
-shows a comparison of WAF values of Baseline, AutoStream, and PCStream under
-the five workloads.  At a glance, we notice that all the techniques benefited
-from using the internal stream.  However, its impact was not so high to offset
-WAF costs caused by the improper stream assignment by the first-phase.  For
-example, in Baseline, all the data from the host are first written to the same
-default stream, regardless of their hotness.  Then, during SSD GC, cold data
-that are left valid in the default stream are moved to the internal stream.
-This helps us prevent cold data from being mixed up with future incoming data,
-separating hot and cold data in two different segments. However, since the host
-keeps writing the mixture of hot/cold data to the default stream, it is
-impossible to avoid extra copy costs involved in the default stream.
-AutoStream worked better than Baseline by assigning hot and cold data to
-different streams, but owing to the inaccuracy of LBA-based hot-cold detection,
-it performed worse than PCStream.
+In order to understand the impact of internal streams on different stream
+management techniques, we compared 
+the two versions of each technique, one with internal streams and the other without internal streams.
+Since internal streams are used only for garbage collection, they can be combined with 
+any existing stream management technique. 
+Fig.~\ref{fig:internal} shows WAF values for five benchmarks with four techniques.
+Overall, internal streams works quite efficiently across the four techniques evaluated.   
+When combined with internal streams, \textsf{\small Baseline}, \textsf{\small AutoStream}, 
+\textsf{\small PCStream} and \textsf{\small ManualStream} reduced the average WAF
+by 25\%, 22\%, 17\%, and 12\%, respectively.  
+Since the quality of initial stream allocations in \textsf{\small Baseline} and 
+\textsf{\small AutoStream} was relatively poor, their WAF improvement ratios 
+with internal streams were higher over \textsf{\small PCStream} and \textsf{\small ManualStream}.     
+Although internal streams were effective in separating short-lived data from long-lived data 
+in both \textsf{\small Baseline} and \textsf{\small AutoStream}, the improvement from internal
+streams in these techniques are not sufficient to outperform \textsf{\small PCStream} and 
+\textsf{\small ManualStream}. 
+Poor initial stream allocations, which keep putting both hot data and cold data to the same stream,
+unfortunately, offset a large portion of benefits from internal streams.
+
 
 \begin{figure}[t]
 	\centering
 	\includegraphics[width=0.9\linewidth]{figure/internal}
-	\caption{Comparison of WAF w/ and w/o internal streams.}
+	\caption{The effect of internal streams on WAF.}
+	\vspace{-5pt}
 	\label{fig:internal}
-	\vspace{-20pt}
+	\vspace{-15pt}
 \end{figure}
 
+\vspace{-10pt}
+\subsection{Impact of the PC Attribute Table}
+\vspace{-5pt}
+As explained in Section 5, the PC attribute table is useful to maintain a 
+long-term history of applications' I/O behavior by exploiting the  
+uniqueness of a PC signature across different applications.   
+In order to evaluate the effect of the PC
+attribute table on the efficiency of \textsf{\small PCStream}, we modified the 
+implementation of the PC attribute table so that the PC attribute table can be 
+selectively disabled on demands when a process terminates its execution.  
+For example, in the kernel compilation scenario with GCC, the PC attribute table 
+becomes empty after each kernel build is completed.
+That is, the next kernel build will start with no existing PC to stream mappings.
 
-\subsection{Impact of the PC-stream table}
 
+Fig.~\ref{fig:pctable} show how many requests are assigned to the 
+default $S_{0}$ stream over varying sizes of the PC attribute table. 
+Since $S_{0}$ is used when no stream is assigned for an incoming
+write request, the higher the ratio of requests assigned to $S_{0}$, 
+the less effective the PC attribute table.   
+As shown in Fig.~\ref{fig:pctable}, in RocksDB, Cassandra, and SQLite, 
+the PC attribute table did not affect much the ratio of writes on $S_{0}$. 
+This is because these
+programs run continuously for a long time while performing the same dominant activities repeatedly.  
+Therefore, although the PC attribute table is not maintained, they can quickly reconstruct it.. 
+On the other hand, the PC attribute table was effective for GCC, 
+which frequently creates and terminates multiple processes (e.g., {\tt cc1}).  
+When no PC attribute table was used, about 16\% of write requests were assigned to $S_{0}$.  
+When the 4-KB PC attribute table was used, this ratio was reduced to 12\%.  
+With the 12-KB PC attribute table, only 9\% of write requests were assigned to $S_{0}$.  
+This reduction in the $S_{0}$ allocation ratio reduced the WAF value from 1.96 to 1.54.
 \begin{figure}[t]
 	\centering
 	\includegraphics[width=0.7\linewidth]{figure/pctable}
-	\caption{Request portion comparison of stream 0 with PC-stream table.}
+	\caption{The effect of the PC attribute table on the default stream allocation.}
 	\label{fig:pctable}
 	\vspace{-20pt}
 \end{figure}
 
-As explained in Section 5, the PC-stream table provides us with a long-term
-history of applications' I/O behaviors, and it even works for short-lived
-applications that are frequently launched and terminated. To confirm its
-benefits, we have modified \textsf{PCStream} so that it throws away the
-contents of the PC-stream table at the end of each benchmark runs. For example,
-in the kernel compilation scenario with GCC, the PC-stream table is
-intentionally set empty after each run finishes, and thus the next run will
-start without any prior knowledge about past PCs.
-
-Fig.~\ref{fig:pctable} illustrates our experimental results, which shows how
-many requests are sent to the stream 0. In \textsf{PCStream}, the stream 0 is
-assigned to write requests whose lifetime behaviors are not estimated yet.
-Therefore, the more write requests are assigned to the stream 0, the less the
-history \textsf{PCStream} maintains. As shown in Fig.~\ref{fig:pctable}, in
-RocksDB, Cassandra, and SQLite, the absence of the PC-stream table did not
-affect the number of requests send to the stream 0. This is because those
-programs ran continuously for a long time. Unlike them, GCC involves frequent
-creations and termination of processes (e.g., \texttt{cc1}).
-Hence, without the PC-stream table, about 16\% of requests were sent to the
-stream 0. With the 4 KB-sized PC-stream table, it was reduced to 12\%
-while with 12 KB-sized table, it was reduced to less than 10\%
-and the result is saturated for tables larger than 12 KB.
-We also
-observed that with the PC-stream table, the WAF value was reduced from 1.96 to
-1.54 for GCC.
 

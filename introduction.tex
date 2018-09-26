@@ -1,5 +1,7 @@
+\vspace{-12pt}
 \section{Introduction}
 \label{sec:intro}
+\vspace{-4pt}
 In flash-based SSDs, garbage collection (GC) is inevitable because NAND flash 
 memory does not support in-place updates.  
 Since the efficiency of garbage collection significantly affects  
@@ -28,7 +30,7 @@ Since data separation decisions can be made more intelligently on the host level
 when streams are properly managed, they can significantly
 improve both the performance and lifetime of 
 flash-based SSDs~\cite{MultiStream, Level, FStream, vStream, AutoStream}.
-We assume that a multi-streamed SSD supports $m$ streams, $S_0$, ..., $S_{m-1}$.
+We assume that a multi-streamed SSD supports $m+1$ streams, $S_0$, ..., $S_{m}$.
 
 In order to maximize the potential benefit of multi-streamed
 SSDs in practice, several requirements need to be satisfied both for 

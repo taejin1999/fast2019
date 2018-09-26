@@ -1,10 +1,12 @@
+\vspace{-10pt}
 \section{Limitations of Current Practice in Multi-Streamed SSDs}
+\vspace{-4pt}
 In this section, we review the key weaknesses of existing stream management techniques 
 as well as stream implementation methods.  
-PCStream was motivated to overcome these weaknesses so that multi-streamed
+\textsf{\small PCStream} was motivated to overcome these weaknesses so that multi-streamed
 SSDs can be widely employed in practice.
 
-
+\vspace{-10pt}
 \subsection{No Automatic Stream Management for General I/O Workloads}
 Most existing stream management techniques~\cite{MultiStream, Level, vStream} 
 require programmers to manually allocate streams for their applications.
@@ -27,17 +29,19 @@ these techniques need to re-allocate streams manually.
 
 \begin{figure}[t]
 	\centering
-	\hfill
 	%\vspace{-9pt}
 	%\captionsetup[subfigure]{margin={0cm,1cm}}
 	\subfloat[Lifetime patterns over LBAs]{\includegraphics[width=0.25\textwidth]{figure/lba_lifetime2}}  % data from 0/03031641
 	%\subfloat[Lifetime patterns over LBAs for update workload]{\includegraphics[width=0.215\textwidth]{figure/update_lifetime}}  
+
 	\hfill
+
+	\vspace{-10pt}
 	\subfloat[Lifetime patterns over time for the chunk A]{\includegraphics[width=0.21\textwidth]{figure/lifetime_in_chunk}} % data from 0/03031641
 	\hspace{10pt}
 	\subfloat[Lifetime patterns over time for the chunk B]{\includegraphics[width=0.21\textwidth]{figure/lifetime_in_chunk4}}
 	%\includegraphics[width=0.9\linewidth]{figure/lba_lifetime} 
-	%\vspace{-3pt}
+	\vspace{-3pt}
 	\caption{Lifetime distributions of append-only workload over addresses and times.} %shane part
 	\label{fig:lba_lifetime}
 	\vspace{-20pt}
@@ -106,12 +110,13 @@ which do not depend on lower-level details such as write patterns based on LBAs.
 	%\vspace{-10pt}
 	%\includegraphics[width=0.6\linewidth]{figure/architecture4}
 	\includegraphics[width=0.7\linewidth]{figure/stream_perf}
-	%\vspace{-9pt}
+	\vspace{-9pt}
 	\caption{Changes in IOPS over varying number of streams.} 
 	\label{fig:stream_perf}
-	\vspace{-22pt}
+	\vspace{-15pt}
 \end{figure}
 
+\vspace{-10pt}
 \subsection{Limited Number of Supported Streams}
 One of the key performance parameters in multi-streamed SSDs is the number of 
 available streams in SSDs.  
