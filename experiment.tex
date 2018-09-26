@@ -57,11 +57,11 @@ with user files before benchmarks run.
 
 \begin{figure}[t]
 	\centering
-	\includegraphics[width=0.9\linewidth]{figure/iops}
+	\includegraphics[width=0.95\linewidth]{figure/iops}
 	\caption{A comparison of normalized IOPS.}
-	\vspace{-15pt}
-	\label{fig:iops}
 	\vspace{-5pt}
+	\label{fig:iops}
+	\vspace{-10pt}
 \end{figure}
 
 We compared IOPS values of three existing techniques with \textsf{\small
@@ -129,10 +129,11 @@ environments.
 
 \begin{figure}[t]
 	\centering
-	\includegraphics[width=0.9\linewidth]{figure/waf}
+	\includegraphics[width=1.\linewidth]{figure/waf}
 	\caption{A comparison of WAF under different schemes.}
-	\label{fig:waf}
 	\vspace{-5pt}
+	\label{fig:waf}
+	\vspace{-10pt}
 \end{figure}
 
 
@@ -149,14 +150,6 @@ environments.
 %The detailed analysis will be shown in the following subsections.
 
 \subsection{Per-stream Lifetime Distribution Analysis}
-
-\begin{figure}[t]
-	\centering
-	\includegraphics[width=1\linewidth]{figure/distribution}
-	\caption{A Comparison of per-stream lifetime distributions.}
-	\label{fig:distribution}
-	\vspace{-10pt}
-\end{figure}
 
 To better understand the benefit of \textsf{\small PCStream} on the WAF
 reduction, we measured per-stream lifetime distributions for the Mixed 1
@@ -177,6 +170,15 @@ PCStream} separates cold data from hot data more efficiently.  Since
 \textsf{\small PCStream} moves long-lived data of a stream to its internal
 stream, the variance of streams with large lifetimes tend to be smaller over
 \textsf{\small ManualStream}.
+
+\begin{figure}[t]
+	\centering
+	\includegraphics[width=1\linewidth]{figure/distribution}
+	\caption{A Comparison of per-stream lifetime distributions.}
+	\label{fig:distribution}
+	\vspace{-10pt}
+\end{figure}
+
 
 \textsf{\small AutoStream} was not able to achieve small per-stream variances
 as shown in Fig.~\ref{fig:distribution} over \textsf{\small PCStream} and
@@ -213,7 +215,7 @@ benefits from internal streams.
 
 \begin{figure}[t]
 	\centering
-	\includegraphics[width=0.9\linewidth]{figure/internal}
+	\includegraphics[width=1.\linewidth]{figure/internal}
 	\caption{The effect of internal streams on WAF.}
 	\vspace{-5pt}
 	\label{fig:internal}
