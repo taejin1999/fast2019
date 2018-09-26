@@ -150,9 +150,9 @@ activity in a long-term basis without a risk of PC collisions.
 
 After estimating expected lifetimes of PC signatures, the PC2Stream mapper
 attempts to group PCs with similar lifetimes into an SSD stream.  This grouping
-process is necessary because while commercial SSDs only support a limited
-number of streams, the number of unique PCs can be quite large \note{({\it e.g.},
-20)}.  For grouping PCs with similar lifetimes, the PC2Stream mapper module
+process is necessary because \note{while commercial SSDs only support a limited
+number of streams ({\it e.g.,} 9), the number of unique PCs can be larger \note{({\it e.g.},
+30)}}.  For grouping PCs with similar lifetimes, the PC2Stream mapper module
 uses the k-means algorithm~\cite{kmeans} which is widely used for similar
 purposes.  In \textsf{\small PCStream}, we use the difference in the data
 lifetime between two PCs as a clustering distance and  generates {\it m}
