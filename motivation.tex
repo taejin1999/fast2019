@@ -27,26 +27,41 @@ restriction by allocating streams to virtual streams, not external streams.
 However, even in \textsf{\small vStream}, virtual stream allocations are left to
 programmer's decisions.
 
+\begin{figure*}[t]
+	\minipage{0.55\textwidth}
+	\includegraphics[width=\linewidth]{figure/fig1_new.png}
+	\caption{Lifetime distributions of append-only workload over addresses and times.}
+	\label{fig:lba_lifetime}
+	\endminipage \hfill
+	\minipage{0.35\textwidth}
+	\includegraphics[width=\linewidth]{figure/stream_perf}
+	\caption{Changes in IOPS over varying number of streams.}
+	\label{fig:stream_perf}
+	\endminipage 
+\end{figure*}
+
+
+\begin{comment}
 \begin{figure}[t]
 	\centering
 	%\vspace{-9pt}
 	%\captionsetup[subfigure]{margin={0cm,1cm}}
-	\subfloat[Lifetime patterns over LBAs]{\includegraphics[width=0.25\textwidth]{figure/lba_lifetime2}}  % data from 0/03031641
+	\subfloat[Lifetime patterns over LBAs]{\includegraphics[width=0.25\textwidth]{figure/lifetime_lba_new.eps}}  % data from 0/03031641
 	%\subfloat[Lifetime patterns over LBAs for update workload]{\includegraphics[width=0.215\textwidth]{figure/update_lifetime}}  
 
 	\hfill
 
 	\vspace{-10pt}
-	\subfloat[Lifetime patterns over time for the chunk A]{\includegraphics[width=0.21\textwidth]{figure/lifetime_in_chunk}} % data from 0/03031641
+	\subfloat[Lifetime patterns over time for the chunk A]{\includegraphics[width=0.21\textwidth]{figure/lifetime_in_chunk1_new.eps}} % data from 0/03031641
 	\hspace{10pt}
-	\subfloat[Lifetime patterns over time for the chunk B]{\includegraphics[width=0.21\textwidth]{figure/lifetime_in_chunk4}}
+	\subfloat[Lifetime patterns over time for the chunk B]{\includegraphics[width=0.21\textwidth]{figure/lifetime_in_chunk4_new.eps}}
 	%\includegraphics[width=0.9\linewidth]{figure/lba_lifetime} 
 	\vspace{-3pt}
 	\caption{Lifetime distributions of append-only workload over addresses and times.} %shane part
 	\label{fig:lba_lifetime}
 	\vspace{-20pt}
 \end{figure}
-
+\end{comment}
 
 Although \textsf{\small FStream}~\cite{FStream} and \textsf{\small AutoStream}~\cite{AutoStream}
 may be considered 
@@ -100,6 +115,7 @@ In order to support {\it general} I/O workloads in an automatic fashion, stream
 management decisions should be based on higher-level information
 which do not depend on lower-level details such as write patterns based on LBAs.
 
+\begin{comment}
 \begin{figure}[t]
 	\centering
 	%\vspace{-10pt}
@@ -110,6 +126,7 @@ which do not depend on lower-level details such as write patterns based on LBAs.
 	\label{fig:stream_perf}
 	\vspace{-15pt}
 \end{figure}
+\end{comment}
 
 \vspace{-10pt}
 \subsection{Limited Number of Supported Streams}

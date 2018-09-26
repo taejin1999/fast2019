@@ -59,22 +59,22 @@ leads to a write system call.
 \begin{figure*}[!t]
 \centering
 %\vspace{-10pt}
-	\subfloat[RocksDB: Logging]{\includegraphics[width=0.22\textwidth]{figure/pcID_2}} % data from 4/03031953 
+	\subfloat[RocksDB: Logging]{\includegraphics[width=0.22\textwidth]{figure/pcID_2_new.eps}} % data from 4/03031953 
 	\hspace{10pt}
-	\subfloat[RocksDB: Flushing]{\includegraphics[width=0.22\textwidth]{figure/pcID_3}}
+	\subfloat[RocksDB: Flushing]{\includegraphics[width=0.22\textwidth]{figure/pcID_3_new.eps}}
 	\hspace{10pt}
-	\subfloat[RocksDB: Compaction]{\includegraphics[width=0.22\textwidth]{figure/pc_3}}  % data from 4/03040047
+	\subfloat[RocksDB: Compaction]{\includegraphics[width=0.22\textwidth]{figure/pc_3_new.eps}}  % data from 4/03040047
 
 	\hfill
 
 	\vspace{-10pt}
-	\subfloat[SQLite: Logging]{\includegraphics[width=0.22\textwidth]{figure/sqlite_short_LBA}}
+	\subfloat[SQLite: Logging]{\includegraphics[width=0.22\textwidth]{figure/sqlite_pcID_3_new.eps}}
 	\hspace{2pt}
-	\subfloat[SQLite: Updating]{\includegraphics[width=0.22\textwidth]{figure/sqlite_long_LBA}}
+	\subfloat[SQLite: Updating]{\includegraphics[width=0.22\textwidth]{figure/sqlite_pcID_1_new.eps}}
 	\hspace{2pt}
-	\subfloat[GCC: Outputting Temp]{\includegraphics[width=0.22\textwidth]{figure/compile_short_PC}}
+	\subfloat[GCC: Outputting Temp]{\includegraphics[width=0.22\textwidth]{figure/gcc_pcID_1_new.eps}}
 	\hspace{2pt}
-	\subfloat[GCC: Outputting Executable]{\includegraphics[width=0.22\textwidth]{figure/compile_long}}
+	\subfloat[GCC: Outputting Executable]{\includegraphics[width=0.22\textwidth]{figure/gcc_pcID_8_new.eps}}
 \vspace{-7pt}
 \caption{Data lifetime distributions of dominant I/O activities in RocksDB, SQLite and GCC.} 
 \label{fig:types_and_PCs}
