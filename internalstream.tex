@@ -26,7 +26,7 @@ because of several practical reasons.
 For example, when multiple I/O contexts are covered by the same execution path, 
 the corresponding PC may represent several I/O contexts whose data lifetimes are quite different.   
 Such a case occurs, for example, 
-in the compaction module of RocksDB.
+in the compaction job of RocksDB.
 RocksDB maintains
 several levels, L1, ..., L$n$, in the persistent storage, except for L0 (or a
 memtable) stored in DRAM.  Once one level, say L2, becomes full, all the data
@@ -78,11 +78,9 @@ by the same execution path (i.e., the same PC) regardless of the level.
 Therefore, the PC for the compaction activity cannot effectively separate data with 
 short lifetimes from one with long lifetimes.
 Fig.~\ref{fig:compaction}(a) and ~\ref{fig:compaction}(b) show
-{\color{blue}
 distinctly different lifetime distributions based on the level of compaction:
 data written from the level 4 have a large lifetime variance while data written from
 the level 2 have a small lifetime variance.
-}
 
 Similarly, in SQLite and GCC, program contexts with large lifetime variations
 are also observed.
@@ -95,14 +93,12 @@ data from the outputting temporary files of GCC can significantly fluctuate
 as well depending on when the next compile step starts.   
 Fig.~\ref{fig:types_and_PCs}(g) shows long lifetimes of 
 object files/executable files after 
-{\color{blue}
 a Linux build was completed
 (with no more re-compilling jobs).
 However, the lifetime of the same object files/executable files 
 may become short when if we have to restart the same
 compile step right after the previous one is finished
 (e.g., because of code changes).
-}
 
 For these {\it outlier} PCs with large lifetime variations, 
 it is a challenge to allocate streams in an efficient fashion unless 

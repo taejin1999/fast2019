@@ -15,11 +15,13 @@ IOPS by up to 56\% over the existing automatic technique while reducing WAF by
 up to 69\%. 
 
 The current version of \textsf{\small PCStream} can be extended in several
-directions.  First, currently, PCStream does not support applications that rely
+directions.  First, \textsf{\small PCStream} does not support applications that rely
 on a write buffer ({\it e.g.,} MySQL). To address this, we plan to extend
-PCStream interfaces so that developers can easily incorporate PCStream into
+\textsf{\small PCStream} interfaces so that developers can easily 
+incorporate \textsf{\small PCStream} into
 their write buffering modules with minimal efforts.  Second, we have only
 considered \texttt{write()}-related systems calls to collect PCs, but many
-applications ({\it e.g.} MongoDB) heavily use the \texttt{mmap()} interface to
-access files, . In the future, we plan to extend PCStream to support
-\texttt{mmap()}.
+applications ({\it e.g.,} MongoDB~\cite{MongoDB}) heavily use 
+the \texttt{mmap()} interface~\cite{mmap} to access files. 
+We plan to extend \textsf{\small PCStream} to work with mmap-intensive applications. 
+

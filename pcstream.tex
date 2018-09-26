@@ -6,7 +6,7 @@
 	\centering
 	%\vspace{-10pt}
 	%\includegraphics[width=0.6\linewidth]{figure/architecture4}
-	\includegraphics[width=0.7\linewidth]{figure/overview}
+	\includegraphics[width=0.7\linewidth]{figure/overview_1}
 	\vspace{-9pt}
 	\caption{An overall architecture of \textsf{\small PCStream}.}
 	\label{fig:architecture}
@@ -24,7 +24,6 @@ PCStream}.  Fig.~\ref{fig:architecture} shows an overall architecture of
 part of a kernel's system call handler as already described in
 Section~\ref{sec:programcontext}, and is responsible for computing a PC signature
 from applications.  
-{\color{blue}
 The PC signature is used for deciding the corresponding stream ID\footnote{
 We call {\it i} the stream ID of $S_i$.} from the PC attribute table.
 \textsf{\small PCStream} maintains various per-PC attributes in the PC attribute table
@@ -32,15 +31,12 @@ including PC signatures, expected data lifetimes, and stream IDs.
 In order to keep the PC attribute table updated over changing workloads,
 the computed PC signature with its LBA information is also sent to the 
 {\it lifetime manager}, which 
-}
 estimates expected lifetimes of data belonging to given PCs.
 Since commercial multi-streamed SSDs only expose a limited number of streams to a host, 
 the \textit{PC2Stream mapper} groups PCs with similar lifetimes using a clustering
 policy, assigning PCs in the same group to the same stream.  
-{\color{blue}
 Whenever the lifetime manager or the PC2Stream mapper are invoked,
 the PC attribute table is updated with new outputs from these modules.
-}
 Finally, the
 \textit{internal stream manager} implemented inside an SSD creates, removes,
 and maintains internal streams associated with external streams.
@@ -65,13 +61,10 @@ and maintains internal streams associated with external streams.
 \vspace{-5pt}
 The responsibility of the lifetime manager is for estimating the lifetime of
 data associated with a PC. 
-{\color{blue}
 Except for outlier PCs, most data from the same PC tend to show similar 
 data lifetimes with small variances.
-}
 
 \textbf{Lifetime estimation:}
-{\color{blue}
 Whenever a new write request {\it R} arrives, 
 the lifetime manager stores the write request time,
 the PC signature, $PC_i$, and the LBA list of {$R$} into the live LBA table.
@@ -89,7 +82,6 @@ Note that the written time entry of the live LBA table is updated differently
 depending on TRIM commands or overwrite requests.
 The written time entry becomes invalid for a TRIM command while it is updated by 
 the current time for an overwrite request.
-}
 
 Maintaining the live LBA table, which is indexed by an LBA unit,
 in DRAM could be a serious burden owing to its
@@ -120,7 +112,6 @@ quite small so that it can be entirely loaded in DRAM.
 From our evaluations, the DRAM size of the PC attribute table was sufficient 
 with several tens of hundreds of KB.
 
-{\color{blue}
 In addition to the main function of the PC attribute table that maintains 
 the data lifetime for a PC, the $memory-resident$ PC attribute table has 
 another quite interesting benefit for the efficient
@@ -138,14 +129,11 @@ thus enabling quick but accurate stream allocation for short-lived
 processes.
 
 The property (2) is rather straightforward because each PC signature is 
-}
 determined by the sum of return addresses inside a process's
 virtual address space.  Unless a program's binary is changed after
 recompilation, those return addresses remain the same, regardless of program's
 execution.  
-{\color{blue}
 The property (1) is also somewhat obvious from the observation
-}
 that the probability that distinct I/O activities that take
 different function-call paths have the same PC signature is extremely low. This
 is even true for multiple programs. Even though they are executed in the same
@@ -154,9 +142,7 @@ programs taking different function-call paths have the same PC.
 %We will show this in the experimental section. 
 Consequently, this immutable property of
 the PC signature for a given I/O activity makes it possible for us to characterize 
-{\color{blue}
 the given I/O activity in a long-term basis without a risk of PC collisions.
-}
 
 %The PC is determined by the sum of the return address, i.e., the path to reach
 %the write system call.  In general, different I/O activities can not have the
@@ -184,12 +170,10 @@ process is necessary because while commercial SSDs only support a limited number
 of streams, the number of unique PCs can be quite large (e.g., 20).  
 For grouping PCs with similar lifetimes, the PC2Stream mapper module uses the k-means
 algorithm~\cite{kmeans} which is widely used for similar purposes.  
-{\color{blue}
 In \textsf{\small PCStream}, we use the difference in the data lifetime between two PCs 
 as a clustering distance and  generates {\it m} clusters of PCs for $m$ streams.
 This algorithm is particularly well suited for our purpose because 
 it is lightweighted in terms of the CPU cycle and memory requirement.
-}
 To quickly assign a proper stream to incoming data, we add an extra field to the
 PC attribute table which keeps a stream ID for each PC signature.  More
 specifically, when a new write request comes, a designated SSD stream ID is
@@ -212,10 +196,8 @@ table is changed.
 \vspace{-10pt}
 \subsection{Internal Stream Management}
 \vspace{-5pt}
-{\color{blue}
 As explained in Section 4.1, there are a few outlier PCs with large lifetime
 variances. In order to treat these PCs in an efficient fashion,
-}
 we devise a
 two-phase method that decides SSD streams in two levels: the main stream in the
 host level and its internal stream in the SSD level.  Conceptually, long-lived
@@ -225,7 +207,7 @@ internal stream may increase WAF, the overhead can be hidden if we restrict
 data copies to the internal stream during GC only.  Since long-lived data
 (i.e., valid pages) in a victim block are moved to a free block during GC,
 blocks belong to an internal stream tend to contain long-lived data.  For
-instance, \textsf{\small PCStream} assigns the compaction-activity PC {\it
+instance, \textsf{\small PCStream} assigns the compaction-activity {\it
 $PC_1$} to a main stream {\it $S_1$} in the first phase.  To separate the
 long-lived data of {\it $PC_1$} (e.g., L4 data) from future short-lived data of
 the same {\it $PC_1$} (e.g., L1 data), valid pages of the {\it $S_1$} are
@@ -235,10 +217,8 @@ We have implemented the internal stream manager with the two-phase method in
 Samsung's PM963 SSD~\cite{PM963}. To make it support the two-phase method, we
 have modified its internal FTL so that it manages internal streams while
 performing GC internally. 
-{\color{blue}
 Since the internal stream manager assigns blocks for an internal stream 
 and reclaims them inside the SSD, no host interface changed is required.
-}
 
 %{\color{blue} 추가로, SSD가 지원하는 stream의 개수가 변경되는 상황에서도
 %reclustering을 통해
@@ -272,19 +252,17 @@ dedicated to dealing with all the writes from an application. For example, in
 MySQL~\cite{MySQL} and PostgreSQL~\cite{PostgreSQL}, every write is first
 sent to a write buffer. Separate flush threads later materialize buffered data
 to persistent storage.  In that case, the PC extractor only captures PCs of
-{\color{blue}
 flush threads, not PCs of I/O activities that originally generate I/O requests,
 because the I/O activities were executed in different threads using different
 execution stacks.
-}
 
 \begin{figure}[t]
 \centering
-	\includegraphics[width=0.8\linewidth]{figure/jvmpc}
+	\includegraphics[width=0.7\linewidth]{figure/jvmpc}
 	\vspace{-10pt}
 	\caption{Extracting PCs for JVM.}
 \label{fig:java}
-	\vspace{-10pt}
+	\vspace{-15pt}
 \end{figure}
 
 

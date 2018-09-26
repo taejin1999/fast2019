@@ -29,7 +29,7 @@ garbage collection by separating hot data from cold data.
 Since data separation decisions can be made more intelligently on the host level over on the SSD level, 
 when streams are properly managed, they can significantly
 improve both the performance and lifetime of 
-flash-based SSDs~\cite{MultiStream, Level, FStream, vStream, AutoStream}.
+flash-based SSDs~\cite{MultiStream, Level,vStream, FStream, AutoStream}.
 We assume that a multi-streamed SSD supports $m+1$ streams, $S_0$, ..., $S_{m}$.
 
 In order to maximize the potential benefit of multi-streamed
@@ -54,7 +54,7 @@ number of I/O-intensive concurrent tasks.
 
 Unfortunately, to the best of our knowledge, no existing solutions  for
 multi-streamed SSDs meet all these requirements.  
-Most existing techniques~\cite{MultiStream, Level, FStream, vStream} require 
+Most existing techniques~\cite{MultiStream, Level, vStream, FStream} require 
 programmers to assign streams at the application level with manual code modifications.
 \textsf{\small AutoStream}~\cite{AutoStream} is the only known automatic technique 
 that supports stream management in the kernel level without manual stream allocation.
@@ -114,8 +114,8 @@ The stream {\it $S_{k'}$} prevents the long-lived data of the stream {\it $S_k$}
 from being mixed with future short-lived data of the stream {\it $S_k$}.
 
 When several program contexts have a large variance in their data lifetimes, 
-the required number of streams can quickly increase if streams can efficiently 
-distinguish data with different lifetimes.
+the required number of total streams can quickly increase to distinguish data with different lifetimes.
+%if streams can efficiently distinguish data with different lifetimes.
 In order to effectively increase the number of streams, we propose a new stream type, 
 called an internal stream, which can be used only for garbage collection.
 Unlike external streams, internal streams can be efficiently
@@ -128,7 +128,7 @@ we have implemented \textsf{\small PCStream}
 in the Linux kernel (ver. 4.5) and 
 extended a Samsung PM963 SSD to support internal streams.
 Our experimental results show that \textsf{\small PCStream}
-can reduce the GC overhead as much as a highly-optimized 
+can reduce the GC overhead as much as a 
 manual stream management technique while requiring no code modification.  
 Over \textsf{\small AutoStream}, \textsf{\small PCStream} improves the average IOPS
 by 28\% while reducing the average WAF by 49\%.

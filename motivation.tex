@@ -12,20 +12,20 @@ Most existing stream management techniques~\cite{MultiStream, Level, vStream}
 require programmers to manually allocate streams for their applications.
 For example, 
 in both \textsf{\small ManualStream}~\cite{MultiStream} and 
-\textsf{\small vStream}~\cite{vStream}, there is no systematic guildeline on how to
+~\cite{Level}, there is no systematic guildeline on how to
 allocate streams for a given application. 
 The efficiency of stream allocations largely depends on the programmer's 
 understanding and expertise on data temperature (i.e., frequency of updates)
-and internals of file systems/database systems.
+and internals of database systems.
+Furthermore, many
+techniques also assume that the number of streams is known {\it a priori}.  
+Therefore, when an SSD with a different number of streams is used, 
+these techniques need to re-allocate streams manually.
 \textsf{\small vStream}~\cite{vStream} 
 is an exception to this 
 restriction by allocating streams to virtual streams, not external streams.  
 However, even in \textsf{\small vStream}, virtual stream allocations are left to
 programmer's decisions.
-Furthermore, many
-techniques also assume that the number of streams is known {\it a priori}.  
-Therefore, when an SSD with a different number of streams is used, 
-these techniques need to re-allocate streams manually.
 
 \begin{figure}[t]
 	\centering
@@ -59,13 +59,11 @@ fully automatic fashion by making stream allocation decisions within
 the kernel.
 However, since \textsf{\small AutoStream} predicts data lifetimes using the
 access frequency of the same LBA, \textsf{\small AutoStream} does not work well 
-{\color{blue}
 when no apparent {\it locality} on LBA accesses exists in applications.  
 For example, in recent data-intensive applications 
 such as RocksDB~\cite{RocksDB} and Cassandra~\cite{Cassandra}, 
 majority of data are written in an append-only manner,
 thus no LBA-level locality can be detected inside an SSD.
-}
 
 In order to illustrate a mismatch between an LBA-based data separation technique and 
 append-only workloads, we analyzed the write pattern of 
@@ -76,31 +74,28 @@ to data lifetimes in RocksDB~\cite{RocksDB}.
 We define the lifetime of data as the interval length (in terms of
 the logical time based on the number of writes) between
 when the data is first written and when the data is invalidated
-by an overwrite or a TRIM command.
+by an overwrite or a TRIM command~\cite{TRIM}.
 As shown in Fig.~\ref{fig:lba_lifetime}(a), 
 there is no strong correlation between LBAs and their lifetimes in RocksDB.  
-
 
 We also analyzed 
 if the lifetimes of LBAs change under some predictable patterns over time 
 although the overall lifetime distribution shows large variances.
-Figs.~\ref{fig:lba_lifetime}(c) and ~\ref{fig:lba_lifetime}(d) show
+Figs.~\ref{fig:lba_lifetime}(b) and ~\ref{fig:lba_lifetime}(c) show
 scatter plots of data lifetimes over the logical time 
 for two specific 1-MB chunks with 256 pages. 
-As shown in Figs.~\ref{fig:lba_lifetime}(c) and ~\ref{fig:lba_lifetime}(d), 
+As shown in Figs.~\ref{fig:lba_lifetime}(b) and ~\ref{fig:lba_lifetime}(c), 
 for the given chunk, the lifetime of data written to the chunk 
 varies in an unpredictable fashion.  
-For example, at the logical time 10 in Fig.~\ref{fig:lba_lifetime}(c), 
+For example, at the logical time 10 in Fig.~\ref{fig:lba_lifetime}(b), 
 the lifetime was 1 but it increases about 
 2.6 million around the logical time 450 
 followed by a rapid drop around the logical time 600. 
 Our workload analysis using RocksDB strongly suggests that under append-only workloads, 
 LBAs are not useful in predicting data lifetimes reliably.
-{\color{blue}
 In practice, the applicability of LBA-based data separation techniques is quite 
 limited to a few cases only when the LBA access
 locality is obvious in I/O activities such as updating metadata files or log files.  
-}
 In order to support {\it general} I/O workloads in an automatic fashion, stream 
 management decisions should be based on higher-level information
 which do not depend on lower-level details such as write patterns based on LBAs.
@@ -123,7 +118,6 @@ available streams in SSDs.
 Since the main function of  streams is to separate data with different lifetimes 
 so that they are not mixed in the same block, it is clear that the 
 higher the number of streams, the more efficient the performance of multi-streamed SSDs.
-{\color{blue}
 For example, Fig.~\ref{fig:stream_perf} shows how IOPS values in RocksDB
 change as the number of streams increases on a Samsung PM963 multi-streamed SSD
 with 8 streams.
@@ -132,7 +126,6 @@ manually allocated.
 As shown in Fig.~\ref{fig:stream_perf}, the IOPS is continuously improving
 until 6 streams are used when dominant I/O activities with different data lifetimes
 are sufficiently separated.
-}
 In order to support a large number of streams, both the SBC-4 and NVMe revision 1.3, which define the 
 multi-stream related specifications, allow up to 65,536 streams~\cite{T10, NVMe}.  
 However, the number of streams supported in

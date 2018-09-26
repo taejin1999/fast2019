@@ -14,7 +14,7 @@ In order to support internal streams, we have modified the existing PM963 FTL fi
 For a detailed performance analysis, we built a modified {\tt nvme-cli} tool that can 
 retrieve the internal profiling data from PCStream-enabled SSDs.  
 We used the modified {\tt nvme-cli} to compute WAF values from PM963 and 
-measure the lifetime of data in each block. 
+measure the lifetime of pages in each block. 
 %and its firmware has been modified to
 %support the internal stream.
 
@@ -261,7 +261,7 @@ As shown in Fig.~\ref{fig:pctable}, in RocksDB, Cassandra, and SQLite,
 the PC attribute table did not affect much the ratio of writes on $S_{0}$. 
 This is because these
 programs run continuously for a long time while performing the same dominant activities repeatedly.  
-Therefore, although the PC attribute table is not maintained, they can quickly reconstruct it.. 
+Therefore, although the PC attribute table is not maintained, they can quickly reconstruct it.
 On the other hand, the PC attribute table was effective for GCC, 
 which frequently creates and terminates multiple processes (e.g., {\tt cc1}).  
 When no PC attribute table was used, about 16\% of write requests were assigned to $S_{0}$.  
