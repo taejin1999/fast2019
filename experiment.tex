@@ -75,7 +75,7 @@ elapsed time of running compiling job and benchmark programs.},
 \textsf{\small PCStream} improved the average IOPS by 45\% and 28\% over 
 \textsf{\small Baseline} and \textsf{\small AutoStream}, respectively.
 \textsf{\small PCStream} outperformed \textsf{\small AutoStream}
-by up to 56\% for complex workloads (i.e., GCC, Mixed1 and Mixed 2) where
+by up to 56\% for complex workloads ({\it i.e.}, GCC, Mixed1 and Mixed 2) where
 the number of extracted PCs far exceeds the number of supported streams
 in PM963. The high efficiency of \textsf{\small PCStream} under complex
 workloads comes from two novel features of \textsf{\small PCStream}: (1) LBA-oblivious 
@@ -96,8 +96,6 @@ ManualStream}; Across all the benchmarks, \textsf{\small PCStream} showed
 similar WAF values as \textsf{\small ManualStream}. \textsf{\small PCStream}
 reduced the average WAF by 63\% and 49\% over \textsf{\small Baseline} and
 \textsf{\small AutoStream}, respectively.  
-%The result shows that separating short-lived data (e.g., log or temp files) from
-%long-lived one (e.g., compaction or result files) using PC was quite effective.
 
 As expected, \textsf{\small Baseline} showed the worst performance among all
 the techniques. Owing to the intrinsic limitation of LBA-based data
@@ -120,7 +118,7 @@ GCC, Mixed 1, and Mixed 2 where more than the maximum number of streams in
 PM963 are needed.  In \textsf{ManualStream}, DB applications and GCC were
 manually annotated at offline, so that write system calls were statically bound
 to specific streams during compile time.  When multiple programs run together
-as in three complex workloads (i.e., GCC, Mixed 1 and Mixed 2), static stream
+as in three complex workloads ({\it i.e.}, GCC, Mixed 1 and Mixed 2), static stream
 allocations are difficult to work efficiently because they cannot adjust to
 dynamically changing execution environments.  However, unlike \textsf{\small
 ManualStream}, \textsf{\small PCStream} continuously adapts its stream
@@ -158,8 +156,8 @@ the 25th to the 75th percentile.  As shown in Fig.~\ref{fig:distribution},
 streams in both \textsf{\small PCStream} and \textsf{\small ManualStream} are
 roughly categorized as two groups, $G1$ = $\{S_1$, $S_2$, $S_3$, $S_4$, $S_5\}$
 and $G2$ = $\{S_6$, $S_7$, $S_8\}$, where $G1$ includes streams with short
-lifetimes and small variances (i.e., $S_1$, $S_2$, $S_3$, $S_4$, and $S_5$) and
-$G2$ includes streams with large lifetimes and large variances (i.e., $S_6$,
+lifetimes and small variances ({\it i.e.}, $S_1$, $S_2$, $S_3$, $S_4$, and $S_5$) and
+$G2$ includes streams with large lifetimes and large variances ({\it i.e.}, $S_6$,
 $S_7$, and $S_8$). The $S_0$ does not belong to any groups as it is assigned to
 requests whose lifetimes are unknown.  Even though the variance in the $S_0$ is
 wider than that in \textsf{\small ManualStream}, \textsf{\small PCStream}
@@ -246,7 +244,7 @@ This is because these programs run continuously for a long time while
 performing the same dominant activities repeatedly.  Therefore, although the PC
 attribute table is not maintained, they can quickly reconstruct it.  On the
 other hand, the PC attribute table was effective for GCC, which frequently
-creates and terminates multiple processes (e.g., {\tt cc1}).  When no PC
+creates and terminates multiple processes ({\it e.g.}, {\tt cc1}).  When no PC
 attribute table was used, about 16\% of write requests were assigned to
 $S_{0}$.  With the 4-KB PC attribute table, this ratio was reduced to 12\%.
 With the 12-KB PC attribute table, only 9\% of write requests were assigned to
