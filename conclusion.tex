@@ -2,6 +2,16 @@
 \section{Conclusions}
 \vspace{-5pt}
 
+\begin{figure}[t]
+	\centering
+	\includegraphics[width=0.7\linewidth]{figure/pctable}
+	%\caption{The effect of the PC attribute table on the default stream allocation.}
+	\caption{\note{The effect of the PC attribute table.}}
+	\label{fig:pctable}
+	\vspace{-10pt}
+\end{figure}
+
+
 We have presented a new stream management technique, \textsf{\small PCStream},
 for multi-streamed SSDs.  Unlike existing techniques, \textsf{\small PCStream}
 fully automates the process of mapping data to a stream based on PCs.  Based on
@@ -15,13 +25,13 @@ IOPS by up to 56\% over the existing automatic technique while reducing WAF by
 up to 69\%. 
 
 The current version of \textsf{\small PCStream} can be extended in several
-directions.  First, \textsf{\small PCStream} does not support applications that rely
-on a write buffer ({\it e.g.,} MySQL). To address this, we plan to extend
-\textsf{\small PCStream} interfaces so that developers can easily 
-incorporate \textsf{\small PCStream} into
-their write buffering modules with minimal efforts.  Second, we have only
-considered \texttt{write()}-related systems calls to collect PCs, but many
-applications ({\it e.g.,} MongoDB~\cite{MongoDB}) heavily use 
-the \texttt{mmap()} interface~\cite{mmap} to access files. 
-We plan to extend \textsf{\small PCStream} to work with mmap-intensive applications. 
+directions.  First, \textsf{\small PCStream} does not support applications that
+rely on a write buffer ({\it e.g.,} MySQL). To address this, we plan to extend
+\textsf{\small PCStream} interfaces so that developers can easily incorporate
+\textsf{\small PCStream} into their write buffering modules with minimal
+efforts.  Second, we have only considered write-related systems calls to
+collect PCs, but many applications ({\it e.g.,} MonetDB~\cite{MonetDB}) heavily
+access files with mmap-related functions ({\it e.g.}, \texttt{mmap()} and
+\texttt{msync()}).  We plan to extend \textsf{\small PCStream} to work with
+mmap-intensive applications. 
 

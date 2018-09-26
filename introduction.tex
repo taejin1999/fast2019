@@ -2,144 +2,128 @@
 \section{Introduction}
 \label{sec:intro}
 \vspace{-4pt}
-In flash-based SSDs, garbage collection (GC) is inevitable because NAND flash 
-memory does not support in-place updates.  
-Since the efficiency of garbage collection significantly affects  
-both the performance and lifetime of SSDs, garbage collection has been extensively 
-investigated so that the garbage collection overhead can be reduced
-~\cite{DAC, WriteAmplification, GCGreedy, GCVictim, GCTTFlash, HotCold}.  
-For example, hot-cold separation techniques are commonly used inside an SSD 
-so that quickly invalidated pages are not mixed with long-lived data in the same block.   
-For more efficient garbage collection, many techniques also exploit
-host-level I/O access characteristics which can be used as useful hints on 
-the efficient data separation inside the SSD~\cite{JiTGC, ShadowGC}.
+In flash-based SSDs, garbage collection (GC) is inevitable because NAND flash
+memory does not support in-place updates.  Since the efficiency of garbage
+collection significantly affects  both the performance and lifetime of SSDs,
+garbage collection has been extensively investigated so that the garbage
+collection overhead can be reduced ~\cite{DAC, WriteAmplification, GCGreedy,
+GCVictim, GCTTFlash, HotCold}.  For example, hot-cold separation techniques are
+commonly used inside an SSD so that quickly invalidated pages are not mixed
+with long-lived data in the same block.   For more efficient garbage
+collection, many techniques also exploit host-level I/O access characteristics
+which can be used as useful hints on the efficient data separation inside the
+SSD~\cite{JiTGC, ShadowGC}.
 
-Multi-streamed SSDs provide a special interface mechanism for 
-a host system, called streams\footnote{In this paper, we use ``streams''
-and ``external streams'' interchangeably.},
-with which data separation decisions 
-{\it on the host level} can be delivered to SSDs~\cite{T10, MultiStream}.  
-When the host system assigns two data $D_1$ and $D_2$ to 
-different streams $S_1$ and $S_2$, respectively, a multi-streamed SSD 
-places $D_1$ and $D_2$ in different blocks, which belong to $S_1$ and $S_2$, respectively.
-When $D_1$ and $D_2$ have distinct update patterns, say, $D_1$ with a short lifetime 
-and $D_2$ with a long lifetime, allocating $D_1$ and $D_2$ to different streams 
-can be helpful in minimizing the copy cost of
-garbage collection by separating hot data from cold data.  
-Since data separation decisions can be made more intelligently on the host level over on the SSD level, 
-when streams are properly managed, they can significantly
-improve both the performance and lifetime of 
-flash-based SSDs~\cite{MultiStream, Level,vStream, FStream, AutoStream}.
-We assume that a multi-streamed SSD supports $m+1$ streams, $S_0$, ..., $S_{m}$.
+Multi-streamed SSDs provide a special interface mechanism for a host system,
+called streams\endnote{In this paper, we use ``streams'' and ``external
+streams'' interchangeably.}, with which data separation decisions {\it on the
+host level} can be delivered to SSDs~\cite{T10, MultiStream}.  When the host
+system assigns two data $D_1$ and $D_2$ to different streams $S_1$ and $S_2$,
+respectively, a multi-streamed SSD places $D_1$ and $D_2$ in different blocks,
+which belong to $S_1$ and $S_2$, respectively.  When $D_1$ and $D_2$ have
+distinct update patterns, say, $D_1$ with a short lifetime and $D_2$ with a
+long lifetime, allocating $D_1$ and $D_2$ to different streams can be helpful
+in minimizing the copy cost of garbage collection by separating hot data from
+cold data.  Since data separation decisions can be made more intelligently on
+the host level over on the SSD level, when streams are properly managed, they
+can significantly improve both the performance and lifetime of flash-based
+SSDs~\cite{MultiStream, Level,vStream, FStream, AutoStream}.  We assume that a
+multi-streamed SSD supports $m+1$ streams, $S_0$, ..., $S_{m}$.
 
-In order to maximize the potential benefit of multi-streamed
-SSDs in practice, several requirements need to be satisfied both for 
-stream management and for SSD stream implementation.
-First, stream management should be supported in a fully automatic fashion 
-over general I/O workloads without any manual work.
-For example, if an
-application developer should manage stream allocations {\it manually} for 
-a given SSD, multi-streamed SSDs are difficult to be 
-widely employed in practice.   
-Second, stream management techniques should have no dependency on 
-the number of available streams.  
-If stream allocation decisions have some dependence on
-the number of available streams,  
-stream allocation should be modified
-whenever the number of streams in an SSD changes.
-Third, the number of streams supported in an SSD should be sufficient 
-to work well with multiple concurrent I/O workloads.  
-For example, with 4 streams, it would be difficult to support a large
-number of I/O-intensive concurrent tasks.  
+In order to maximize the potential benefit of multi-streamed SSDs in practice,
+several requirements need to be satisfied both for stream management and for
+SSD stream implementation.  First, stream management should be supported in a
+fully automatic fashion over general I/O workloads without any manual work.
+For example, if an application developer should manage stream allocations {\it
+manually} for a given SSD, multi-streamed SSDs are difficult to be widely
+employed in practice.   Second, stream management techniques should have no
+dependency on the number of available streams.  If stream allocation decisions
+have some dependence on the number of available streams,  stream allocation
+should be modified whenever the number of streams in an SSD changes.  Third,
+the number of streams supported in an SSD should be sufficient to work well
+with multiple concurrent I/O workloads.  For example, with 4 streams, it would
+be difficult to support a large number of I/O-intensive concurrent tasks.  
 
 Unfortunately, to the best of our knowledge, no existing solutions  for
-multi-streamed SSDs meet all these requirements.  
-Most existing techniques~\cite{MultiStream, Level, vStream, FStream} require 
-programmers to assign streams at the application level with manual code modifications.
-\textsf{\small AutoStream}~\cite{AutoStream} is the only known automatic technique 
-that supports stream management in the kernel level without manual stream allocation.
-However, since \textsf{\small AutoStream} predicts data lifetimes using the update frequency 
-of the logical block address (LBA), it does not work well with modern append-only workloads 
-such as RocksDB~\cite{RocksDB} or Cassandra~\cite{Cassandra}.  
-Unlike conventional update workloads where data written to the same LBAs 
-often show strong update locality, 
-append-only workloads make it impossible to predict data lifetimes 
+multi-streamed SSDs meet all these requirements.  Most existing
+techniques~\cite{MultiStream, Level, vStream, FStream} require programmers to
+assign streams at the application level with manual code modifications.
+\textsf{\small AutoStream}~\cite{AutoStream} is the only known automatic
+technique that supports stream management in the kernel level without manual
+stream allocation.  However, since \textsf{\small AutoStream} predicts data
+lifetimes using the update frequency of the logical block address (LBA), it
+does not work well with modern append-only workloads such as
+RocksDB~\cite{RocksDB} or Cassandra~\cite{Cassandra}.  Unlike conventional
+update workloads where data written to the same LBAs often show strong update
+locality, append-only workloads make it impossible to predict data lifetimes
 from LBA characteristics such as the access frequency.
 
-In this paper, we propose a {\it fully-automatic} stream management technique, 
-called \textsf{\small PCStream}, which works efficiently over general I/O workloads including 
-append-only workloads.   
-The key insight behind \textsf{\small PCStream} is that stream allocation decisions should be made 
-at a higher abstraction level where {\it I/O activities}, not LBAs, can be meaningfully distinguished.
-For example, in RocksDB, if we can tell whether the current I/O is a part of 
-a logging activity or a flushing activity, stream allocation decisions can be made 
-a lot more efficiently over when only LBAs of the current I/O is
-available.   
+In this paper, we propose a {\it fully-automatic} stream management technique,
+called \textsf{\small PCStream}, which works efficiently over general I/O
+workloads including append-only workloads.   The key insight behind
+\textsf{\small PCStream} is that stream allocation decisions should be made at
+a higher abstraction level where {\it I/O activities}, not LBAs, can be
+meaningfully distinguished.  For example, in RocksDB, if we can tell whether
+the current I/O is a part of a logging activity or a flushing activity, stream
+allocation decisions can be made a lot more efficiently over when only LBAs of
+the current I/O is available.   
 
-In \textsf{\small PCStream}, we employ a write program context\footnote{In this paper, since we are 
-interested in write-related system calls such as write() in Linux, 
-we use {\it write program contexts} and {\it
-program contexts} interchangeable where no confusion arises.} as such a higher-level 
-classification unit for representing I/O activity regardless of the type of I/O workloads. 
-A program context (PC)~\cite{PC, PC2}, which represents an execution path of a program 
-up to a write system call,
-is known to be effective in 
-representing dominant I/O activities~\cite{PCHa}.  
-Furthermore, most dominant I/O activities tend to show distinct data lifetime characteristics.
-By identifying dominant I/O activities using program contexts during run time, 
-\textsf{\small PCStream} can automate the whole process of stream allocation within the 
-kernel with no manual work.  In order to
-seamlessly support various SSDs with different numbers of streams, \textsf{\small PCStream} 
-groups program contexts with similar data lifetimes 
-depending on the number of supported streams
-using the k-means clustering algorithm~\cite{kmeans}. 
-Since program contexts focus on the semantic aspect of I/O execution as a lifetime
-classifier, not on the low-level details such as LBAs and access patterns, 
-\textsf{\small PCStream} easily 
-supports different I/O workloads regardless of whether it is update-only or append-only.   
+In \textsf{\small PCStream}, we employ a write program context\endnote{
+Since we are interested in write-related system calls such as write() in
+Linux, we use {\it write program contexts} and {\it program contexts}
+interchangeable where no confusion arises.} as such a higher-level
+classification unit for representing I/O activity regardless of the type of I/O
+workloads.  A program context (PC)~\cite{PC, PC2}, which represents an
+execution path of a program up to a write system call, is known to be effective
+in representing dominant I/O activities~\cite{PCHa}.  Furthermore, most
+dominant I/O activities tend to show distinct data lifetime characteristics.
+By identifying dominant I/O activities using program contexts during run time,
+\textsf{\small PCStream} can automate the whole process of stream allocation
+within the kernel with no manual work.  In order to seamlessly support various
+SSDs with different numbers of streams, \textsf{\small PCStream} groups program
+contexts with similar data lifetimes depending on the number of supported
+streams using the k-means clustering algorithm~\cite{kmeans}.  Since program
+contexts focus on the semantic aspect of I/O execution as a lifetime
+classifier, not on the low-level details such as LBAs and access patterns,
+\textsf{\small PCStream} easily supports different I/O workloads regardless of
+whether it is update-only or append-only.   
 
-Although many program contexts show that their data lifetimes are 
-narrowly distributed, we observed that 
-this is not necessarily true because of several reasons.  
-For example, when a single program context handles multiple types of data with 
-different lifetimes, data lifetime distributions of such
-program contexts  
-have rather large variances.
-In \textsf{\small PCStream}, 
-when such a program context {\it $PC_j$} is observed 
-(which was mapped to a stream {\it $S_k$}), 
-the long-lived data of {\it $PC_j$} are moved to a different stream {\it $S_{k'}$}
-during GC.  
-The stream {\it $S_{k'}$} prevents the long-lived data of the stream {\it $S_k$} 
-from being mixed with future short-lived data of the stream {\it $S_k$}.
+Although many program contexts show that their data lifetimes are narrowly
+distributed, we observed that this is not necessarily true because of several
+reasons.  For example, when a single program context handles multiple types of
+data with different lifetimes, data lifetime distributions of such program
+contexts  have rather large variances.  In \textsf{\small PCStream}, when such
+a program context {\it $PC_j$} is observed (which was mapped to a stream {\it
+$S_k$}), the long-lived data of {\it $PC_j$} are moved to a different stream
+{\it $S_{k'}$} during GC.  The stream {\it $S_{k'}$} prevents the long-lived
+data of the stream {\it $S_k$} from being mixed with future short-lived data of
+the stream {\it $S_k$}.
 
-When several program contexts have a large variance in their data lifetimes, 
-the required number of total streams can quickly increase to distinguish data with different lifetimes.
+When several program contexts have a large variance in their data lifetimes,
+the required number of total streams can quickly increase to distinguish data
+with different lifetimes.
 %if streams can efficiently distinguish data with different lifetimes.
-In order to effectively increase the number of streams, we propose a new stream type, 
-called an internal stream, which can be used only for garbage collection.
-Unlike external streams, internal streams can be efficiently
-implemented at low cost without increasing the SSD resource budget.  
-In the current version of \textsf{\small PCStream}, we create the same number of internal streams 
-as the external streams, effectively doubling the number of available streams. 
+In order to effectively increase the number of streams, we propose a new stream
+type, called an internal stream, which can be used only for garbage collection.
+Unlike external streams, internal streams can be efficiently implemented at low
+cost without increasing the SSD resource budget.  In the current version of
+\textsf{\small PCStream}, we create the same number of internal streams as the
+external streams, effectively doubling the number of available streams. 
 
-In order to evaluate the effectiveness of \textsf{\small PCStream}, 
-we have implemented \textsf{\small PCStream}
-in the Linux kernel (ver. 4.5) and 
-extended a Samsung PM963 SSD to support internal streams.
-Our experimental results show that \textsf{\small PCStream}
-can reduce the GC overhead as much as a 
-manual stream management technique while requiring no code modification.  
-Over \textsf{\small AutoStream}, \textsf{\small PCStream} improves the average IOPS
-by 28\% while reducing the average WAF by 49\%.
+In order to evaluate the effectiveness of \textsf{\small PCStream}, we have
+implemented \textsf{\small PCStream} in the Linux kernel (ver. 4.5) and
+extended a Samsung PM963 SSD to support internal streams.  Our experimental
+results show that \textsf{\small PCStream} can reduce the GC overhead as much
+as a manual stream management technique while requiring no code modification.
+Over \textsf{\small AutoStream}, \textsf{\small PCStream} improves the average
+IOPS by \error{28\%} while reducing the average WAF by \error{49\%.}
 
-The rest of this paper is organized as follows. 
-In Section 2, we explain the key limitations of 
-existing stream management techniques and stream implementation methods.
-Before describing \textsf{\small PCStream}, its two core components are 
-presented in Sections 3 and 4.
-Section 5 describes \textsf{\small PCStream} in detail.
-Experimental results follow in Section 6,
-and related work is summarized in Section 7.  
-Finally, we conclude with a summary and future work in Section 8.
+The rest of this paper is organized as follows.  
+%In Section 2, we explain the key limitations of existing stream management techniques and stream implementation methods.  
+\note{In Section 2, we review existing stream management techniques.}
+Before describing \textsf{\small PCStream}, its two
+core components are presented in Sections 3 and 4.  Section 5 describes
+\textsf{\small PCStream} in detail.  Experimental results follow in Section 6,
+and related work is summarized in Section 7.  Finally, we conclude with a
+summary and future work in Section 8.
 

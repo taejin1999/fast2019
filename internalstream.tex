@@ -1,9 +1,10 @@
 \vspace{-10pt}
-\section{Support for Large Number of Streams Using Internal Streams}
+%\section{Support for Large Number of Streams Using Internal Streams}
+\section{\note{Support for Large Number of Streams}}
 \label{sec:internal}
 \vspace{-5pt}
-As explained in Section 2.2, the number of streams is restricted to a small number 
-because of the practical limits on the backup power capacity and the size of fast memory.  
+The number of streams is restricted to a small number 
+because of the practical limits on the backup power capacity and the size of fast memory.
 Since the number of supported streams critically impacts the overall performance 
 of multi-streamed SSDs, in this section, we propose a new type of streams, 
 called {\it internal streams}, which can be
@@ -15,7 +16,8 @@ especially when PCs show large lifetime variances in their data lifetime
 distributions.
 
 \vspace{-10pt}
-\subsection{Program Contexts with Large Lifetime Variances}
+%\subsection{Program Contexts with Large Lifetime Variances}
+\subsection{\note{PCs with Large Lifetime Variances}}
 \vspace{-5pt}
 For most PCs, their lifetime distributions tend to have small variances
 (e.g., Figs.~\ref{fig:types_and_PCs}(a), ~\ref{fig:types_and_PCs}(d), and
@@ -114,7 +116,7 @@ need to be doubled so
 that each stream can be associated with its internal stream.
 
 \vspace{-10pt}
-\subsection{Efficient Implementation of Internal Streams}
+\subsection{\note{Implementation of Internal Streams}}
 \vspace{-5pt}
 As described in Section 2.2, it is difficult to increase the number of 
 (normal) streams.  However, 
