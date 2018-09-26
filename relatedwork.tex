@@ -1,51 +1,44 @@
 \vspace{-10pt}
 \section{Related Work}
 \vspace{-5pt}
-There have been many studies that exploit multi-streamed SSDs to reduce
-WAF~\cite{MultiStream, Level, vStream, FStream, AutoStream, PCStream}.  Kang
-{\it et al.} first proposed a multi-streamed SSD that supported manual stream
-allocation for separating different types of data~\cite{MultiStream}.  Yang
-{\it et al.} showed that by manually annotating source code based on prior
-knowledge about behaviors of programs, it would be possible to isolate
-different types of data into separate streams, thereby lowering overall WAF and
-improving performance~\cite{Level}.  Yong {\it et al.} presented a virtual
-stream management technique that resolved limited number of streams.  All those
-studies involve modifying the source code of target applications, leading to
-increase deployment efforts.  In contrast to them, PCStream does not require us
-to manually modify applications' code.
+
+There have been many studies for multi-streamed SSDs ~\cite{MultiStream, Level,
+vStream, FStream, AutoStream, PCStream}.  Kang {\it et al.} first proposed a
+multi-streamed SSD that supported manual stream allocation for separating
+different types of data~\cite{MultiStream}.  Yang {\it et al.} showed that a
+multi-streamed SSD was effective for separating data of append-only
+applications like RocksDB~\cite{Level}.  Yong {\it et al.} presented a virtual
+stream management technique that resolved a limited number of streams.  While
+above studies involve modifying the source code of target programs, the
+stream allocation in PCStream is done automatically without any code
+modification.
 
 Rho {\it et al.} proposed a stream management technique, called FStream, at the
-file system layer~\cite{FStream}. File system's metadata and journal data that
-may have different lifetime characteristics were allocated to separate streams.
-Moreover, by separating user data based on filenames or extensions, it further
-improved the accuracy of data separation. Since FStream was implemented as part
-of a file system, it was not able to detect application's I/O behaviors.
-Moreover, FStream may be hard to be deployed in practice because of its strong
-dependency with file system implementation. Unlike FStream, PCStream is not
-only able to detect application-specific behaviors, but also dose not require
+file system layer~\cite{FStream}. In FStream, metadata, journal
+data, and user data that may have different lifetime characteristics were
+allocated to separate streams.  Since FStream was implemented as part of a file
+system, it was not able to directly detect application's I/O behaviors.
+Also, it may be hard to be deployed in practice due to 
+dependency with specific file-system implementations. PCStream is not
+only able to detect application-specific behaviors, but also does not require
 any modification of file systems.
 
 Yang {\it et al.} presented the automatic stream management technique at the
-block device layer. Similar to existing hot-cold separation techniques, it
-decided the lifetime of data based on LBAs where they are written to and
-assigned data to different streams depending on their update frequency.
-Unfortunately, it does not work well for applications ({\it e.g.}, RocksDB,
-Cassandra, and GCC) which have no strong relation between hotness of data and
-LBAs.  The proposed PCStream detects the lifetime of data using PCs, so it
-works well even for append-only and write-once workloads.
+block device layer. Similar to hot-cold separation employed in FTLs,
+it decided the lifetime of data based on update frequencies of LBAs.
+It didn't work well for applications ({\it e.g.}, RocksDB
+and GCC) which have no a direct correlation between hotness of data
+and LBAs.  PCStream detects the lifetime of data using PCs, so it
+performs well even for append-only and write-once workloads.
 
 Ha {\it et al.} proposed an idea of using PCs to separate hot data from cold
-one in an FTL layer~\cite{PCHa}. 
-Kim {\it et al.} extended it for multi-streamed
-SSDs~\cite{PCStream}.  Our work has improved the previous approaches in a more
-complete fashion. First, we showed the importance of the internal stream that
-was performed inside an SSD guided by a host-level stream manager. Second, we
-showed that PC information could be used as a useful hint for various
-applications and workloads, including indirect write applications, append-only,
-in-place update, and write-once workloads. Third, we showed that the unique and
-consistent nature of PCs made it possible to capture long-term I/O behaviors of
-both long-lived and short-lived applications.  Finally, more realistic and
-detailed evaluations using various applications and a real SSD were presented
-in this paper.
+one in an FTL layer~\cite{PCHa}.  Kim {\it et al.} extended it for
+multi-streamed SSDs~\cite{PCStream}.  Our work has improved the above
+studies in a more complete fashion by showing 1) the important of the
+internal stream guided by a host-level stream manager; 2) the effectiveness of
+PCs for various workloads, including append-only, in-place update, and
+write-once patterns; and 3) the unique and consistent nature of PCs which makes
+it possible to capture long-term I/O behaviors of even short-lived
+applications.
 
 
