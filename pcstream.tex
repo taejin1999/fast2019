@@ -109,7 +109,7 @@ signature of an I/O activity is virtually guaranteed to be {\it unique} across
 over different executions of the same application (the property 2), the PC
 attribute table can capture a long-term history of programs' I/O behaviors.
 Because of the above two properties of a PC signature, \textsf{\small PCStream}
-can exploit the I/O behavior of even short-lived processes (e.g., \texttt{cpp}
+can exploit the I/O behavior of even short-lived processes ({\it e.g.}, \texttt{cpp}
 and \texttt{cc1} for GCC)  that are launched and terminated frequently.  When
 short-lived processes are frequently executed, the PC attribute table can hold
 their PC attributes from their previous executions, thus enabling quick but
@@ -151,7 +151,7 @@ activity in a long-term basis without a risk of PC collisions.
 After estimating expected lifetimes of PC signatures, the PC2Stream mapper
 attempts to group PCs with similar lifetimes into an SSD stream.  This grouping
 process is necessary because while commercial SSDs only support a limited
-number of streams, the number of unique PCs can be quite large \note{(e.g.,
+number of streams, the number of unique PCs can be quite large \note{({\it e.g.},
 20)}.  For grouping PCs with similar lifetimes, the PC2Stream mapper module
 uses the k-means algorithm~\cite{kmeans} which is widely used for similar
 purposes.  In \textsf{\small PCStream}, we use the difference in the data
@@ -189,12 +189,12 @@ data in the main stream are moved to its internal stream \note{so that (future)
 short-lived data will not be mixed with short-lived data in the main stream}.
 Although moving data to the internal stream may increase WAF, the overhead can
 be hidden if we restrict data copies to the internal stream during GC only.
-Since long-lived data (i.e., valid pages) in a victim block are moved to a free
+Since long-lived data ({\it i.e.}, valid pages) in a victim block are moved to a free
 block during GC, blocks belong to an internal stream tend to contain long-lived
 data.  For instance, \textsf{\small PCStream} assigns the compaction-activity
 {\it $PC_1$} to a main stream {\it $S_1$} in the first phase.  To separate the
-long-lived data of {\it $PC_1$} (e.g., L4 data) from future short-lived data of
-the same {\it $PC_1$} (e.g., L1 data), valid pages of the {\it $S_1$} are
+long-lived data of {\it $PC_1$} ({\it e.g.}, L4 data) from future short-lived data of
+the same {\it $PC_1$} ({\it e.g.}, L1 data), valid pages of the {\it $S_1$} are
 assigned to its internal stream for the second phase during GC.
 
 We have implemented the internal stream manager with the two-phase method in
