@@ -59,12 +59,13 @@ Multi-streamed SSDs can significantly improve both the performance and lifetime
 of flash-based SSDs when their streams are properly managed.  However, existing
 stream management solutions do not adequately support the multi-streamed SSDs
 for their wide adoption.  No existing stream management technique works in a
-fully automatic fashion for general I/O workloads including append-only
-workloads.  Furthermore, the limited number of available streams makes it
+fully automatic fashion for general I/O workloads.
+Furthermore, the limited number of available streams makes it
 difficult to effectively manage streams when a large number of streams are
 required.  In this paper, we propose a {\it fully automatic} stream management
 technique, \textsf{\small PCStream}, which can work efficiently for {\it
-general} I/O workloads.  \textsf{\small PCStream} is based on the key insight
+general} I/O workloads with {\it heterogeneous} write characteristics.  
+\textsf{\small PCStream} is based on the key insight
 that stream allocation decisions should be made on dominant I/O activities. By
 identifying dominant I/O activities using program contexts, \textsf{\small
 PCStream} fully automates the whole process of stream allocation within the

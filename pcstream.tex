@@ -20,7 +20,7 @@
 
 In this section, we explain the detailed implementation of \textsf{\small
 PCStream}.  Fig.~\ref{fig:architecture} shows an overall architecture of
-\textsf{\small PCStream}. The \textit{PC Extractor} is implemented as part of a
+\textsf{\small PCStream}. The \textit{PC extractor} is implemented as part of a
 kernel's system call handler as already described in
 Section~\ref{sec:programcontext}, and is responsible for computing a PC
 signature from applications.  The PC signature is used for deciding the
@@ -35,9 +35,9 @@ a limited number of streams to a host, the \textit{PC2Stream mapper} groups PCs
 with similar lifetimes using a clustering policy, assigning PCs in the same
 group to the same stream.  Whenever the lifetime manager or the PC2Stream
 mapper are invoked, the PC attribute table is updated with new outputs from
-these modules.  Finally, the \textit{internal stream manager} implemented
-inside an SSD creates, removes, and maintains internal streams associated with
-external streams.
+these modules.  Finally, the \textit{internal stream manager}, 
+which was implemented inside an SSD as a firmware, is responsible for
+handling internal streams associated with external streams.
 
 %the lifetime of data written by write-related system calls can be
 %monitored at the program context level.  
@@ -104,21 +104,21 @@ sufficient with several tens or hundreds of KB.
 In addition to the main function of the PC attribute table that maintains the
 data lifetime for a PC, the $memory-resident$ PC attribute table has another
 interesting benefit for the efficient stream management.  Since a PC
-signature of an I/O activity is virtually guaranteed to be {\it unique} across
-{\it all} applications (the property 1),  and a PC signature does not change
-over different executions of the same application (the property 2), the PC
+signature of an I/O activity is virtually guaranteed to be {\it globally unique} across
+{\it all} applications (the uniqueness property), and a PC signature does not change
+over different executions of the same application (the consistency property), the PC
 attribute table can capture a long-term history of programs' I/O behaviors.
-Because of the above two properties of a PC signature, \textsf{\small PCStream}
+Because of the uniqueness and consistency of a PC signature, \textsf{\small PCStream}
 can exploit the I/O behavior of even short-lived processes ({\it e.g.}, \texttt{cpp}
 and \texttt{cc1} for GCC)  that are launched and terminated frequently.  When
 short-lived processes are frequently executed, the PC attribute table can hold
 their PC attributes from their previous executions, thus enabling quick but
 accurate stream allocation for short-lived processes.
 
-The property (2) is rather straightforward because each PC signature is
+The consistency property is rather straightforward because each PC signature is
 determined by the sum of return addresses inside a process's virtual address
 space.  Unless a program's binary is changed after recompilation, those return
-addresses remain the same, regardless of program's execution.  The property (1)
+addresses remain the same, regardless of program's execution.  The uniqueness property 
 is also somewhat obvious from the observation that the probability that
 distinct I/O activities that take different function-call paths have the same
 PC signature is extremely low. This is even true for multiple programs. Even
@@ -186,7 +186,7 @@ variances. In order to treat these PCs in an efficient fashion, we devise a
 two-phase method that decides SSD streams in two levels: the main stream in the
 host level and its internal stream in the SSD level.  Conceptually, long-lived
 data in the main stream are moved to its internal stream \note{so that (future)
-short-lived data will not be mixed with short-lived data in the main stream}.
+short-lived data will not be mixed with long-lived data in the main stream}.
 Although moving data to the internal stream may increase WAF, the overhead can
 be hidden if we restrict data copies to the internal stream during GC only.
 Since long-lived data ({\it i.e.}, valid pages) in a victim block are moved to a free

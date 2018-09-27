@@ -10,10 +10,10 @@ processor and 16~GB DRAM.  As a multi-streamed SSD, we used Samsung's PM963
 streams and 1 default stream.  When no stream is specified with a write
 request, the default stream is used.  To support internal streams, we have
 modified the existing PM963 FTL firmware.  For a detailed performance analysis,
-we built a modified {\tt nvme-cli} tool that can retrieve the internal
-profiling data from PCStream-enabled SSDs.  We used the modified {\tt nvme-cli}
-to compute WAF values from PM963 and measure the lifetime of pages in each
-block. 
+we built a modified {\tt nvme-cli}~\cite{nvmecli} tool that can retrieve the internal
+profiling data from \textsf{\small PCStream}-enabled SSDs.  
+Using the modified {\tt nvme-cli} tool, we can monitor 
+WAF values and per-block data lifetimes from the extended PM963 SSD during run time.
 
 We compared \textsf{\small PCStream} with three existing schemes:
 \textsf{\small Baseline}, \textsf{\small ManualStream}~\cite{MultiStream}, and
@@ -33,19 +33,19 @@ For more realistic evaluations, we also used mixed workloads running two
 different benchmark programs simultaneously.
 
 In both RocksDB and Cassandra experiments, Yahoo! Cloud Serving Benchmark
-(YCSB)~\cite{YCSB} with 12-million keys was used to generate update heavy
-workload (workload type A) which has a mix of 50/50 reads and writes.  Since
+(YCSB)~\cite{YCSB} with 12-million keys was used to generate update-heavy
+workloads (workload type A) which consists of 50/50 reads and writes.  Since
 both RocksDB and Cassandra are based on the append-only LSM-tree
 algorithm~\cite{LSM}, they have three dominant I/O activities (such as logging,
 flushing, and compaction).  Cassandra is written in Java, so its PC is
-extracted by the procedure described in Section 5.4.  In SQLite evaluations,
+extracted by the modified procedure described in Section 5.4.  In SQLite evaluations,
 TPC-C~\cite{TPCC} was used with 20 warehouses.  SQLite has two dominant I/O
 activities such as logging and updating tables.  In GCC experiments, a Linux
 kernel was built 30 times.  For each build, 1/3 of source files, which were
 selected randomly, were modified and recompiled.  Since GCC creates many
 temporary files ({\it e.g.}, \texttt{.s}, \texttt{.d}, and \texttt{.rc}) as
 well as long-lived files ({\it e.g.}, \texttt{.o}) from different compiler
-tools there are more than 20 dominant PCs.  To generate mixed workloads, we run
+tools, there are more than 20 dominant PCs.  To generate mixed workloads, we run
 RocksDB and GCC scenarios together (denoted by Mixed 1), and run SQLite and GCC
 scenarios at the same time (denoted by Mixed 2).  In order to emulate an aged
 SSD in our experiments, 90\% of the total SSD capacity was initially filled up
@@ -146,7 +146,7 @@ environments.
 %However, the reclustering enables PCStream to adapt changing workload or find
 %better stream mapping.
 %The detailed analysis will be shown in the following subsections.
-
+\vspace{-10pt}
 \subsection{Per-stream Lifetime Distribution Analysis}
 
 To better understand the benefit of \textsf{\small PCStream} on the WAF
@@ -174,7 +174,7 @@ stream, the variance of streams with large lifetimes tend to be smaller over
 	\includegraphics[width=1\linewidth]{figure/distribution}
 	\caption{A Comparison of per-stream lifetime distributions.}
 	\label{fig:distribution}
-	\vspace{-10pt}
+	\vspace{-15pt}
 \end{figure}
 
 
@@ -187,6 +187,7 @@ separation technique of \textsf{\small AutoStream} does not work well with both
 RocksDB and GCC, all the streams include hot data as well as cold data, thus
 resulting in large lifetime variances. 
 
+\vspace{-15pt}
 \subsection{Impact of Internal Streams}
 
 In order to understand the impact of internal streams on different stream

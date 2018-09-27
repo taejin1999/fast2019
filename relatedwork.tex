@@ -37,11 +37,11 @@ as well as in-place update workloads.
 Ha {\it et al.} proposed an idea of using PCs to separate hot data from cold
 one in an FTL layer~\cite{PCHa}.  Kim {\it et al.} extended it for
 multi-streamed SSDs~\cite{PCStream}.  Unlike these work, our study treats the
-PC-based stream management problem in a more complete fashion by showing (1)
+PC-based stream management problem in a more complete fashion by (1)
 pinpointing the key weaknesses of existing multi-streamed SSD solutions, (2)
 extending the effectiveness of PCs for more general I/O workloads including
 write-once patterns, and (3) introducing internal streams as an effective
 solution for outlier PCs.  Furthermore, \textsf{\small PCStream} exploits the
 globally unique nature of a PC signature for supporting short-lived
-applications.
+applications that runs frequently.
 

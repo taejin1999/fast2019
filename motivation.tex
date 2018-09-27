@@ -12,7 +12,8 @@ SSDs can be widely employed in practice.
 Most existing stream management techniques~\cite{MultiStream, Level, vStream} 
 require programmers to manually allocate streams for their applications.
 For example, 
-in both \textsf{\small ManualStream}~\cite{MultiStream} and 
+in both \textsf{\small ManualStream\endnote{For brevity, we denote the manual stream allocation
+method used in ~\cite{MultiStream} by \textsf{\small ManualStream}.}}~\cite{MultiStream} and 
 ~\cite{Level}, there is no systematic guildeline on how to
 allocate streams for a given application. 
 The efficiency of stream allocations largely depends on the programmer's 
@@ -34,10 +35,12 @@ programmer's decisions.
 	\caption{Lifetime distributions of append-only workload over addresses and times.}
 	\label{fig:lba_lifetime}
 	\endminipage \hfill
-	\minipage{0.35\textwidth}
+	\minipage{0.32\textwidth}
 	\includegraphics[width=\linewidth]{figure/stream_perf}
 	%\caption{Changes in IOPS over varying number of streams.}
-	\caption{IOPS with varying streams.}
+	%\caption{IOPS with varying streams.}
+	\caption{IOPS changes over the number of streams.}
+	\vspace{-20pt}
 	\label{fig:stream_perf}
 	\endminipage 
 \end{figure*}
@@ -86,7 +89,7 @@ append-only workloads, we analyzed the write pattern of
 RocksDB~\cite{RocksDB}, which is a
 popular key-value store based on the LSM-tree algorithm~\cite{LSM}.
 Fig.~\ref{fig:lba_lifetime}(a) shows how LBAs may be related 
-to data lifetimes in RocksDB~\cite{RocksDB}.  
+to data lifetimes in RocksDB.  
 We define the lifetime of data as the interval length (in terms of
 the logical time based on the number of writes) between
 when the data is first written and when the data is invalidated
@@ -97,16 +100,16 @@ there is no strong correlation between LBAs and their lifetimes in RocksDB.
 We also analyzed 
 if the lifetimes of LBAs change under some predictable patterns over time 
 although the overall lifetime distribution shows large variances.
-Figs.~\ref{fig:lba_lifetime}(b) and ~\ref{fig:lba_lifetime}(c) show
+Figs.~\ref{fig:lba_lifetime}(b) and~\ref{fig:lba_lifetime}(c) show
 scatter plots of data lifetimes over the logical time 
 for two specific 1-MB chunks with 256 pages. 
-As shown in Figs.~\ref{fig:lba_lifetime}(b) and ~\ref{fig:lba_lifetime}(c), 
+As shown in Figs.~\ref{fig:lba_lifetime}(b) and~\ref{fig:lba_lifetime}(c), 
 for the given chunk, the lifetime of data written to the chunk 
 varies in an unpredictable fashion.  
 For example, at the logical time 10 in Fig.~\ref{fig:lba_lifetime}(b), 
 the lifetime was 1 but it increases about 
-2.6 million around the logical time 450 
-followed by a rapid drop around the logical time 600. 
+2 million around the logical time 450 
+followed by a rapid drop around the logical time 500. 
 Our workload analysis using RocksDB strongly suggests that under append-only workloads, 
 LBAs are not useful in predicting data lifetimes reliably.
 In practice, the applicability of LBA-based data separation techniques is quite 
@@ -137,7 +140,7 @@ data with different lifetimes so that they are not mixed in the same block, it
 is clear that the higher the number of streams, the more efficient the
 performance of multi-streamed SSDs.  For example, Fig.~\ref{fig:stream_perf}
 shows how IOPS in RocksDB changes as the number of streams increases on a
-Samsung PM963 multi-streamed SSD with 8 streams.  The \texttt{db\_bench}
+Samsung PM963 multi-streamed SSD with 9 streams.  The \texttt{db\_bench}
 benchmark was used for measuring IOPS values with streams manually allocated.
 As shown in Fig.~\ref{fig:stream_perf}, the IOPS is continuously improving
 until 6 streams are used when dominant I/O activities with different data
