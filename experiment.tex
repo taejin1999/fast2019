@@ -68,10 +68,10 @@ We compared IOPS values of three existing techniques with \textsf{\small
 PCStream}.  Fig.~\ref{fig:iops} shows normalized IOPS for six benchmarks with
 four different techniques. For all the measured IOPS values\endnote{ For
 RocksDB, Cassandra, and SQLite, the YCSB benchmark and TPC-C benchmark compute
-IOPS values as a part of the benchmark report.  For GCC and mixed workloads,
-which do not compute IOPS values, we computed the IOPS by dividing the total
-number of write requests (measured at the block device layer) by the total
-elapsed time of running compiling job and benchmark programs.},
+IOPS values as a part of the benchmark report.  For GCC,
+where an IOPS value is not measured during run time, 
+we computed the IOPS value as a ratio between the total number of write requests
+(measured at the block device layer) and the total elapsed time of running GCC.},
 \textsf{\small PCStream} improved the average IOPS by 45\% and 28\% over 
 \textsf{\small Baseline} and \textsf{\small AutoStream}, respectively.
 \textsf{\small PCStream} outperformed \textsf{\small AutoStream}
