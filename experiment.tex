@@ -1,8 +1,5 @@
-\vspace{-10pt}
 \section{Experimental Results}
-\vspace{-5pt}
 \subsection{Experimental Settings}
-\vspace{-5pt}
 In order to evaluate \textsf{\small PCStream}, we have implemented it in the
 Linux kernel (version 4.5) on a PC host with Intel Core i7-2600 8-core
 processor and 16~GB DRAM.  As a multi-streamed SSD, we used Samsung's PM963
@@ -20,7 +17,7 @@ We compared \textsf{\small PCStream} with three existing schemes:
 \textsf{\small AutoStream}~\cite{AutoStream}.  \textsf{\small Baseline}
 indicates a legacy SSD that does not support multiple streams. \textsf{\small
 ManualStream} represents a multi-streamed SSD with manual stream allocation.
-\textsf{\small AutoStream} represents the LBA-baed stream management technique
+\textsf{\small AutoStream} represents the LBA-based stream management technique
 proposed in ~\cite{AutoStream}. 
 
 
@@ -51,9 +48,7 @@ scenarios at the same time (denoted by Mixed 2).  In order to emulate an aged
 SSD in our experiments, 90\% of the total SSD capacity was initially filled up
 with user files before benchmarks run.
 
-\vspace{-10pt}
 \subsection{Performance Evaluation}
-\vspace{-5pt}
 
 \begin{figure}[t]
 	\centering
@@ -66,7 +61,7 @@ with user files before benchmarks run.
 
 We compared IOPS values of three existing techniques with \textsf{\small
 PCStream}.  Fig.~\ref{fig:iops} shows normalized IOPS for six benchmarks with
-four different techniques. For all the measured IOPS values\endnote{ For
+four different techniques. For all the measured IOPS values\footnote{ For
 RocksDB, Cassandra, and SQLite, the YCSB benchmark and TPC-C benchmark compute
 IOPS values as a part of the benchmark report.  For GCC,
 where an IOPS value is not measured during run time, 
@@ -86,9 +81,7 @@ can be effective.
 Even in SQLite, \textsf{\small PCStream} outperformed \textsf{\small AutoStream}
 by 10\%.
 
-\vspace{-10pt}
 \subsection{WAF Comparison}
-\vspace{-5pt}
 
 Fig.~\ref{fig:waf} shows WAF values of four techniques for six benchmarks.
 Overall, \textsf{\small PCStream} was as efficient as \textsf{\small
@@ -112,7 +105,7 @@ reduced WAF by up to 69\% over \textsf{\small AutoStream}.
 %however, long-lived data in database files are moved to internal streams during
 %GC so that we can further reduce WAF.
 
-One interesting observations in Fig.~\ref{fig:waf} is that \textsf{\small
+One interesting observation in Fig.~\ref{fig:waf} is that \textsf{\small
 PCStream} achieved a lower WAF value than even \textsf{\small ManualStream} for
 GCC, Mixed 1, and Mixed 2 where more than the maximum number of streams in
 PM963 are needed.  In \textsf{ManualStream}, DB applications and GCC were
@@ -146,7 +139,6 @@ environments.
 %However, the reclustering enables PCStream to adapt changing workload or find
 %better stream mapping.
 %The detailed analysis will be shown in the following subsections.
-\vspace{-10pt}
 \subsection{Per-stream Lifetime Distribution Analysis}
 
 To better understand the benefit of \textsf{\small PCStream} on the WAF
@@ -187,7 +179,6 @@ separation technique of \textsf{\small AutoStream} does not work well with both
 RocksDB and GCC, all the streams include hot data as well as cold data, thus
 resulting in large lifetime variances. 
 
-\vspace{-15pt}
 \subsection{Impact of Internal Streams}
 
 In order to understand the impact of internal streams on different stream
@@ -221,9 +212,7 @@ benefits from internal streams.
 	\vspace{-10pt}
 \end{figure}
 
-\vspace{-10pt}
 \subsection{Impact of the PC Attribute Table}
-\vspace{-5pt}
 As explained in Section 5, the PC attribute table is useful to maintain a
 long-term history of applications' I/O behavior by exploiting the uniqueness of
 a PC signature across different applications.   To evaluate the effect of the

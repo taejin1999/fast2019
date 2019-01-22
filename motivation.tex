@@ -1,33 +1,8 @@
-\vspace{-10pt}
 \section{Limitations of Current Practice in Multi-Streamed SSDs}
-\vspace{-4pt}
 In this section, we review the key weaknesses of existing stream management techniques 
 as well as stream implementation methods.  
 \textsf{\small PCStream} was motivated to overcome these weaknesses so that multi-streamed
 SSDs can be widely employed in practice.
-
-\vspace{-10pt}
-\subsection{No Automatic Stream Management for General I/O Workloads}
-%\subsection{\note{No Automatic Stream Management}}
-Most existing stream management techniques~\cite{MultiStream, Level, vStream} 
-require programmers to manually allocate streams for their applications.
-For example, 
-in both \textsf{\small ManualStream\endnote{For brevity, we denote the manual stream allocation
-method used in ~\cite{MultiStream} by \textsf{\scriptsize ManualStream}.}}~\cite{MultiStream} and 
-~\cite{Level}, there is no systematic guildeline on how to
-allocate streams for a given application. 
-The efficiency of stream allocations largely depends on the programmer's 
-understanding and expertise on data temperature ({\it i.e.}, frequency of updates)
-and internals of database systems.
-Furthermore, many
-techniques also assume that the number of streams is known {\it a priori}.  
-Therefore, when an SSD with a different number of streams is used, 
-these techniques need to re-allocate streams manually.
-\textsf{\small vStream}~\cite{vStream} 
-is an exception to this 
-restriction by allocating streams to virtual streams, not external streams.  
-However, even in \textsf{\small vStream}, virtual stream allocations are left to
-programmer's decisions.
 
 \begin{figure*}[t]
 	\minipage{0.63\textwidth}
@@ -44,6 +19,29 @@ programmer's decisions.
 	\label{fig:stream_perf}
 	\endminipage 
 \end{figure*}
+
+
+\subsection{No Automatic Stream Management for General I/O Workloads}
+%\subsection{\note{No Automatic Stream Management}}
+Most existing stream management techniques~\cite{MultiStream, Level, vStream} 
+require programmers to manually allocate streams for their applications.
+For example, 
+in both \textsf{\small ManualStream\footnote{For brevity, we denote the manual stream allocation
+method used in ~\cite{MultiStream} by \textsf{\scriptsize ManualStream}.}}~\cite{MultiStream} and 
+~\cite{Level}, there is no systematic guildeline on how to
+allocate streams for a given application. 
+The efficiency of stream allocations largely depends on the programmer's 
+understanding and expertise on data temperature ({\it i.e.}, frequency of updates)
+and internals of database systems.
+Furthermore, many
+techniques also assume that the number of streams is known {\it a priori}.  
+Therefore, when an SSD with a different number of streams is used, 
+these techniques need to re-allocate streams manually.
+\textsf{\small vStream}~\cite{vStream} 
+is an exception to this 
+restriction by allocating streams to virtual streams, not external streams.  
+However, even in \textsf{\small vStream}, virtual stream allocations are left to
+programmer's decisions.
 
 \begin{comment}
 \begin{figure}[t]
@@ -132,7 +130,6 @@ which do not depend on lower-level details such as write patterns based on LBAs.
 \end{figure}
 \end{comment}
 
-\vspace{-10pt}
 \subsection{Limited Number of Supported Streams}
 One of the key performance parameters in multi-streamed SSDs is the number of
 available streams in SSDs.  Since the main function of  streams is to separate

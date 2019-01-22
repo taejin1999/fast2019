@@ -1,7 +1,5 @@
-\vspace{-12pt}
 \section{Introduction}
 \label{sec:intro}
-\vspace{-4pt}
 In flash-based SSDs, garbage collection (GC) is inevitable because NAND flash
 memory does not support in-place updates.  Since the efficiency of garbage
 collection significantly affects  both the performance and lifetime of SSDs,
@@ -15,8 +13,9 @@ which can be used as useful hints on the efficient data separation inside the
 SSD~\cite{JiTGC, ShadowGC}.
 
 Multi-streamed SSDs provide a special interface mechanism for a host system,
-called streams\endnote{In this paper, we use ``streams'' and ``external
-streams'' interchangeably.}, which data separation decisions {\it on the
+called streams\footnote{In this paper, we use ``streams'' and ``external
+streams'' interchangeably.}. With the stream interface,
+data separation decisions {\it on the
 host level} can be delivered to SSDs~\cite{T10, MultiStream}.  When the host
 system assigns two data $D_1$ and $D_2$ to different streams $S_1$ and $S_2$,
 respectively, a multi-streamed SSD places $D_1$ and $D_2$ in different blocks,
@@ -70,7 +69,7 @@ the current I/O is a part of a logging activity or a compaction activity, stream
 allocation decisions can be made a lot more efficiently over when only LBAs of
 the current I/O is available.   
 
-In \textsf{\small PCStream}, we employ a write program context\endnote{
+In \textsf{\small PCStream}, we employ a write program context\footnote{
 Since we are interested in write-related system calls such as {\tt write()} in
 Linux, we use {\it write program contexts} and {\it program contexts}
 interchangeable where no confusion arises.} as such a higher-level
@@ -118,7 +117,7 @@ extended a Samsung PM963 SSD to support internal streams.  Our experimental
 results show that \textsf{\small PCStream} can reduce the GC overhead as much
 as a manual stream management technique while requiring no code modification.
 Over \textsf{\small AutoStream}, \textsf{\small PCStream} improves the average
-IOPS by 28\% while reducing the average WAF by 49\%.
+IOPS by 28\% while reducing the average write amplification factor (WAF) by 49\%.
 
 The rest of this paper is organized as follows.  
 %In Section 2, we explain the key limitations of existing stream management techniques and stream implementation methods.  

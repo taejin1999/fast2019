@@ -1,7 +1,8 @@
-\vspace{-10pt}
 %\section{Automatic I/O Activity Management Using Program Contexts}
-\section{\note{Automatic I/O Activity Management}}
+\vspace{-10pt}
+\section{Automatic I/O Activity Management}
 \label{sec:programcontext}
+
 \vspace{-5pt}
 \begin{figure}[t]
 %	\vspace{-10pt}
@@ -59,10 +60,8 @@ the execution path which leads to a write system call.
 \vspace{-10pt}
 \end{figure*}
 
-\vspace{-10pt}
 %\subsection{Program Context as a Unit of Lifetime Classification}
-\subsection{\note{PC as a Unit of Lifetime Classification}}
-\vspace{-5pt}
+\subsection{PC as a Unit of Lifetime Classification}
 In order to illustrate that using PCs is an effective way to distinguish I/O
 activities of an application and their data lifetime patterns, we measured data
 lifetime distributions of PCs from various applications with different I/O
@@ -137,9 +136,7 @@ short because temporary files are not overwritten each time they
 are generated during the compiling step. 
 
 
-\vspace{-10pt}
 \subsection{Extracting PCs}
-\vspace{-5pt}
 As mentioned earlier, a PC signature, which is used as a unique ID of each
 program context, is defined to be the sum of program counters along the
 execution path of function calls that finally reaches a write-related system
@@ -191,11 +188,11 @@ to back-track return addresses along the call chains.
 We employ a simple but effective workaround for back-tracking a call stack when
 a frame pointer is not available.  When a write system call is made,
 we scan every word in the stack
-and checks if it belongs to process's code segment.  If the scanned stack word
+and check if it belongs to process's code segment.  If the scanned stack word
 holds a value within the address range of the code segment, it assumes that it
 is a return address.  
 Fig.~\ref{fig:getpc}(b) shows the scanning process.
-Since scanning the entire stack may takes too long, we stop
+Since scanning the entire stack may take too long, we stop
 the scanning step once a sufficient number of return address candidates are found.
 In the current implementation, the scanning process stops early once 
 five return address candidates are identified.  

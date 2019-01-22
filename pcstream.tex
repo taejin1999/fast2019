@@ -1,6 +1,4 @@
-\vspace{-10pt}
 \section{Design and Implementation of \textsf{PCStream}}
-\vspace{-5pt}
 
 \begin{figure}[t]
 	\centering
@@ -24,7 +22,7 @@ PCStream}.  Fig.~\ref{fig:architecture} shows an overall architecture of
 kernel's system call handler as already described in
 Section~\ref{sec:programcontext}, and is responsible for computing a PC
 signature from applications.  The PC signature is used for deciding the
-corresponding stream ID\endnote{ We call {\it i} the stream ID of $S_i$.} from
+corresponding stream ID\footnote{ We call {\it i} the stream ID of $S_i$.} from
 the PC attribute table.  \textsf{\small PCStream} maintains various per-PC
 attributes in the PC attribute table including PC signatures, expected data
 lifetimes, and stream IDs.  In order to keep the PC attribute table updated
@@ -54,9 +52,7 @@ handling internal streams associated with external streams.
 %stream ID.  This mapping is required because the number of streams in an SSD
 %is generally less than the number of PCs in host applications.
 
-\vspace{-10pt}
 \subsection{PC Lifetime Management}
-\vspace{-5pt}
 The responsibility of the lifetime manager is for estimating the lifetime of
 data associated with a PC. 
 Except for outlier PCs, most data from the same PC tend to show similar 
@@ -98,8 +94,11 @@ quickly retrieve the expected lifetime of a requested PC signature, the PC
 attribute table is managed through a hash data structure. Each hash entry
 requires only 12 bytes: 64-bit for a PC signature and 32-bit for a predicted
 lifetime.  The table size is thus small so that it can be entirely loaded
-in DRAM.  From our evaluations, the DRAM size of the PC attribute table was
-sufficient with several tens or hundreds of KB.
+in DRAM.   
+{{\color{blue} From our evaluations, the number of unique PCs was up to 30.
+So the DRAM size of the PC attribute table was
+sufficient with 512 KB.
+}
 
 In addition to the main function of the PC attribute table that maintains the
 data lifetime for a PC, the $memory-resident$ PC attribute table has another
@@ -144,15 +143,13 @@ activity in a long-term basis without a risk of PC collisions.
 %PCs are unique, if PC lifetime information is maintained, appropriate stream
 %can be allocated even to the first request of a restarting program.
 
-\vspace{-10pt}
 \subsection{Mapping PCs to SSD streams}
-\vspace{-5pt}
 
 After estimating expected lifetimes of PC signatures, the PC2Stream mapper
 attempts to group PCs with similar lifetimes into an SSD stream.  This grouping
-process is necessary because \note{while commercial SSDs only support a limited
-number of streams ({\it e.g.,} 9), the number of unique PCs can be larger \note{({\it e.g.},
-30)}}.  For grouping PCs with similar lifetimes, the PC2Stream mapper module
+process is necessary because while commercial SSDs only support a limited
+number of streams ({\it e.g.,} 9), the number of unique PCs can be larger ({\it e.g.},
+30).  For grouping PCs with similar lifetimes, the PC2Stream mapper module
 uses the k-means algorithm~\cite{kmeans} which is widely used for similar
 purposes.  In \textsf{\small PCStream}, we use the difference in the data
 lifetime between two PCs as a clustering distance and  generates {\it m}
@@ -178,15 +175,13 @@ re-clustering is triggered when 10\% of the PC lifetime entries in the PC
 attribute table is changed.
 
 
-\vspace{-10pt}
 \subsection{Internal Stream Management}
-\vspace{-5pt}
 As explained in Section 4.1, there are a few outlier PCs with large lifetime
 variances. In order to treat these PCs in an efficient fashion, we devise a
 two-phase method that decides SSD streams in two levels: the main stream in the
 host level and its internal stream in the SSD level.  Conceptually, long-lived
-data in the main stream are moved to its internal stream \note{so that (future)
-short-lived data will not be mixed with long-lived data in the main stream}.
+data in the main stream are moved to its internal stream so that (future)
+short-lived data will not be mixed with long-lived data in the main stream.
 Although moving data to the internal stream may increase WAF, the overhead can
 be hidden if we restrict data copies to the internal stream during GC only.
 Since long-lived data ({\it i.e.}, valid pages) in a victim block are moved to a free
@@ -215,9 +210,7 @@ is required.
 %number of PCs created by applications is not limited, the clustering algorithm
 %must be efficient enough to quickly handle many PCs. 
 
-\vspace{-10pt}
 \subsection{PC Extraction for Indirect Writes}
-\vspace{-5pt}
 One limitation of using PCs to extract I/O characteristics is that it only
 works with C/C++ programs that \textit{directly} call write-related system
 calls.  Many programs, however, often invoke write system calls

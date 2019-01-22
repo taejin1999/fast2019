@@ -1,7 +1,7 @@
 %\documentclass[letterpaper, onecolumn, 10pt]{article}
 %\linespread{2.4}
 \documentclass[letterpaper, twocolumn, 10pt]{article}
-\usepackage{usenix2019,endnotes}
+\usepackage{usenix2019}
 %\linespread{0.99}
 
 \usepackage{multirow}
@@ -19,13 +19,11 @@
 \usepackage{graphicx}
 %\usepackage{float}
 \usepackage{caption}
-\usepackage[draft]{pgf}
-\usepackage[normalem]{ulem}
+%\usepackage[draft]{pgf}
+%\usepackage[normalem]{ulem}
 
 
 \renewcommand{\figurename}{Fig.}
-\newcommand{\note}[1]{{\color{black}{#1}}}
-\newcommand{\error}[1]{{\color{black}{#1}}}
 
 \begin{document}
 
@@ -35,7 +33,10 @@
 %\numberofauthors{1}
 
 \author{
-{\rm Submission \#22} \\
+	{\rm Taejin Kim, Duwon Hong, Sangwook Shane Hahn$^\dagger$, Myoungjun Chun,}\\ 
+	{\rm Sungjin Lee$^\ddagger$, Jooyoung Hwang$^\ast$, Jongyoul Lee$^\ast$, and Jihong Kim} \\
+	\and
+	Seoul National University, $^\dagger$Western Digital, $^\ddagger$DGIST, $^\ast$Samsung Electronics
 }
 
 
@@ -52,7 +53,7 @@
 
 \maketitle
 %\thispagestyle{empty}
-%\pagestyle{empty}
+\pagestyle{empty}
 \subsection*{Abstract}
 \vspace{-6pt}
 Multi-streamed SSDs can significantly improve both the performance and lifetime
@@ -89,26 +90,20 @@ to 69\%.
 \input{conclusion}
 
 
-\begin{comment}
 \section*{Acknowledgments}
-
 This work was supported by the National Research Foundation of Korea (NRF) 
 grant funded by the Korea government (Ministry
 of Science and ICT) 
 (NRF-2015M3C4A7065645 and NRF-2018R1A2B6006878).
 The ICT at Seoul National University
 provided research facilities for this study. 
-Sungjin Lee was supported by
-the NRF grant funded by the Korea government 
-(Ministry of Science and ICT) 
-(NRF-2017R1E1A1A01077410) and 
-the DGIST R\&D Program of the Ministry of 
-Science and ICT (18-EE-01).
+Sungjin Lee was supported by the National Research Foundation of Korea (NRF) 
+grant funded by the Korea government (MSIT) 
+(NRF-2018R1A5A1060031, NRF-2017R1E1A1A01077410)
 (Corresponding Author: Jihong Kim)
-\end{comment}
 
+\newpage
 \input{reference}
 
-\theendnotes
 
 \end{document}
